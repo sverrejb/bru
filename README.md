@@ -6,8 +6,8 @@ A **B**idirectional **R**emote **U**plink (also Norwegian for "bridge").
 > **other** national drink.
 
 Read and send your phone's SMS from a desktop over an end-to-end-encrypted
-[iroh](https://iroh.computer) link — no cloud account, no message store, no port
-forwarding.
+[iroh](https://iroh.computer) link — no cloud account, no external databses, no port
+forwarding or fiddling with network settings.
 
 - `android/` — Kotlin agent exposing a iroh endpoint.
 - `web/` — Browser client: read and send SMSes, copy paste to phone's clipboard.
