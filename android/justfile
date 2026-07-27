@@ -1,0 +1,73 @@
+# Bru
+
+
+export JAVA_HOME := "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+
+adb      := "$HOME/Library/Android/sdk/platform-tools/adb"
+pkg      := "com.bru"
+activity := pkg + "/.MainActivity"
+
+# List available recipes
+default:
+    @just --list
+
+# Build the debug APK
+build:
+    ./gradlew :app:assembleDebug
+
+# Run the JVM unit tests
+test:
+    ./gradlew :app:testDebugUnitTest
+
+# Install the debug build, then launch it on the connected device
+run: install launch
+
+# Install the debug build on the connected device
+install:
+    ./gradlew :app:installDebug
+
+# Launch the app on the device
+launch:
+    {{adb}} shell am start -n {{activity}}
+
+# Build the release APK
+release:
+    ./gradlew :app:assembleRelease
+
+# Build the release App Bundle (.aab)
+bundle:
+    ./gradlew :app:bundleRelease
+    @du -h app/build/outputs/bundle/release/*.aab
+
+# Build release and print the APK size
+size: release
+    @du -h app/build/outputs/apk/release/*.apk
+
+# Show the debug runtime dependency tree
+deps:
+    ./gradlew :app:dependencies --configuration debugRuntimeClasspath
+
+# Measure cold-start time (force-stop, then timed launch)
+coldstart:
+    {{adb}} shell am force-stop {{pkg}}
+    {{adb}} shell am start -W -n {{activity}}
+
+# Tail logcat for this app's process only
+logcat:
+    {{adb}} logcat --pid=`{{adb}} shell pidof -s {{pkg}}`
+
+# List connected devices
+devices:
+    {{adb}} devices -l
+
+# Uninstall the app from the device
+uninstall:
+    {{adb}} uninstall {{pkg}}
+
+# Wipe all app data (message DB, paired desktop id, prefs)
+nuke:
+    {{adb}} shell pm clear {{pkg}}
+
+# Remove build outputs
+clean:
+    ./gradlew clean
