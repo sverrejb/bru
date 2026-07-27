@@ -1,0 +1,21 @@
+# Rust
+/target
+target/
+**/*.rs.bk
+
+# Kotlin / Android / Gradle (android/)
+.gradle/
+build/
+local.properties
+*.apk
+*.aab
+*.keystore
+captures/
+
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+.vscode/
+*.swp
