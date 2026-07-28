@@ -1,5 +1,4 @@
-# Rust
-/target
+# Rust / wasm
 target/
 **/*.rs.bk
 
