@@ -1,3 +1,4 @@
 [build]
-  publish = "web"
+  base = "web"
+  publish = "."
   command = "uname -a; (clang --version && clang --print-targets | grep -i wasm) || echo NO_WASM_CLANG; rustup --version || echo NO_RUSTUP; cargo --version || echo NO_CARGO; true"
