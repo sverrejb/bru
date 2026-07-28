@@ -2,10 +2,12 @@
 <meta charset="utf-8">
 <title>WASM POC</title>
 <pre id="out">loading wasm…</pre>
+<div id="qr"></div>
 <script type="module">
-  import init, { bru_init, bru_online } from './pkg/bru_web.js';
+  import init, { bru_init, bru_online, generate_pairing_code } from './pkg/bru_web.js';
 
   const out = document.getElementById('out');
+  const qr = document.getElementById('qr');
   const printToDOM = (line) => { out.textContent += `\n${line}`; };
 
   // ugly hot reload hack 
@@ -26,14 +28,23 @@
   try {
     await init();
     out.textContent = 'binding iroh endpoint…';
-    printToDOM(await bru_init(key()));
+    const endpointId = await bru_init(key());
+    printToDOM(endpointId);
     printToDOM('reaching relay…');
     await Promise.race([
       bru_online(),
       new Promise((_, reject) => setTimeout(() => reject(new Error('no relay after 15s')), 15_000)),
     ]);
     printToDOM('iroh connection is up');
+
+    const svgString = generate_pairing_code(endpointId);
+    qr.insertAdjacentHTML('beforeend', svgString);
+
   } catch (e) {
     printToDOM(`failed: ${e}`);
   }
+
+
+
 </script>
+

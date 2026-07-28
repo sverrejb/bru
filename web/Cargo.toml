@@ -11,6 +11,7 @@ crate-type = ["cdylib"]
 iroh = { version = "1", default-features = false, features = ["tls-ring"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
+qrcode = { version = "0.14.1", default-features = false, features = ["svg"] }
 
 [profile.release]
 opt-level = "z"

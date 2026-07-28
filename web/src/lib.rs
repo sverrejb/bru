@@ -1,7 +1,7 @@
 use std::cell::RefCell;
-
 use iroh::{Endpoint, SecretKey, endpoint::presets};
 use wasm_bindgen::prelude::*;
+use qrcode::{QrCode, render::svg};
 
 const ALPN: &[u8] = b"bru/1";
 
@@ -32,4 +32,13 @@ pub async fn bru_online() -> Result<(), JsError> {
         .ok_or_else(|| JsError::new("bru_init not called"))?;
     endpoint.online().await;
     Ok(())
+}
+
+#[wasm_bindgen]
+pub fn generate_pairing_code(text: &str) -> Result<String, JsError> {
+    let code = QrCode::new(text).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
+    Ok(code
+        .render::<svg::Color>()
+        .min_dimensions(512, 512)
+        .build())
 }
