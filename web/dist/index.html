@@ -44,14 +44,20 @@
     <p>Install the companion app and pair the phone by scanning the QR-code below.<a href="https://todo.todo"></a>.</p>
     <pre id="out">loading wasm…</pre>
     <div id="qr"></div>
+    <p>Browser identifier: 
+    <span id="sessionName"></span>
+    </p>
   </main>
 </body>
 
 <script type="module">
   import init, { bru_init, bru_online, generate_pairing_code } from './pkg/bru_web.js';
+  import { key, name } from './util.js';
 
   const out = document.getElementById('out');
   const qr = document.getElementById('qr');
+  const sessionName = document.getElementById('sessionName');
+
   const printToDOM = (line) => { out.textContent += `\n${line}`; };
 
   // ugly hot reload hack 
@@ -61,26 +67,12 @@
   const built = await stamp();
   setInterval(async () => { if (await stamp() !== built) location.reload(); }, 1000);
 
-  const key = () => {
-    const stored = localStorage.getItem('bru.key');
-    if (stored) return Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
-    const fresh = crypto.getRandomValues(new Uint8Array(32));
-    localStorage.setItem('bru.key', btoa(String.fromCharCode(...fresh)));
-    return fresh;
-  };
-
-  const name = () => {
-    const stored = localStorage.getItem('bru.name');
-    if (stored) return stored;
-    const fresh = crypto.randomUUID().slice(0, 8);
-    localStorage.setItem('bru.name', fresh);
-    return fresh;
-  };
-
   try {
     await init();
     out.textContent = 'binding iroh endpoint…';
-    const endpointId = await bru_init(key());
+    const keyBytes = key();
+    const sessionNameValue = name(keyBytes);
+    const endpointId = await bru_init(keyBytes);
     printToDOM(endpointId);
     printToDOM('reaching relay…');
     await Promise.race([
@@ -89,8 +81,10 @@
     ]);
     printToDOM('iroh connection is up');
 
-    const svgString = generate_pairing_code(name());
+    const svgString = generate_pairing_code(sessionNameValue);
     qr.insertAdjacentHTML('beforeend', svgString);
+
+    sessionName.textContent = sessionNameValue;
 
   } catch (e) {
     printToDOM(`failed: ${e}`);

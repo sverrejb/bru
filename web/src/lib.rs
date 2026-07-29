@@ -40,9 +40,8 @@ pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
         .with_borrow(|slot| slot.as_ref().map(|e| e.id().to_string()))
         .ok_or_else(|| JsError::new("bru_init not called"))?;
     let pairing_string = format!("https://bru.works#d={}&n={}", id, name);
-
     let code = QrCode::new(&pairing_string).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
-   
+
     Ok(code
         .render::<svg::Color>()
         .min_dimensions(512, 512)
