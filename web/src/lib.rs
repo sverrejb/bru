@@ -5,6 +5,12 @@ use qrcode::{QrCode, render::svg};
 
 const ALPN: &[u8] = b"bru/1";
 
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
 thread_local! {
     static ENDPOINT: RefCell<Option<Endpoint>> = const { RefCell::new(None) };
 }
@@ -48,7 +54,8 @@ pub async fn accept_pairing() -> Result<String, JsError> {
     let phone_id = conn.remote_id().to_string();
 
     let (mut send, mut recv) = conn.accept_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
-    recv.read_to_end(4096).await.map_err(|e| JsError::new(&e.to_string()))?;
+    let bytes = recv.read_to_end(4096).await.map_err(|e| JsError::new(&e.to_string()))?;
+    log(&String::from_utf8_lossy(&bytes));
     send.write_all(br#"{"ok":true}"#).await.map_err(|e| JsError::new(&e.to_string()))?;
     send.finish().map_err(|e| JsError::new(&e.to_string()))?;
     conn.closed().await;

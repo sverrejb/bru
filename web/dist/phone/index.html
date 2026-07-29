@@ -1,1 +1,36 @@
-//tood redirect here if paired with phone?
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your phone</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Bru</h1>
+        <p>Paired phone</p>
+    </header>
+    <main>
+        <p>Phone id: <span id="phoneId">none</span></p>
+        <button id="clearBtn">Clear data</button>
+    </main>
+</body>
+
+<script type="module">
+    import { key, phoneKey, name } from '../util.js';
+    const phoneId = document.getElementById('phoneId');
+    const clearBtn = document.getElementById('clearBtn');
+    if (!phoneKey()) {
+        window.location.href = "/"
+    }
+    phoneId.textContent = phoneKey();
+    clearBtn.onclick = () => localStorage.clear();
+
+
+
+</script>
+
+</html>

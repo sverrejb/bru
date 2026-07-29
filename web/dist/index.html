@@ -17,7 +17,8 @@
   <main>
 
     <h2>What is Bru?</h2>
-    <p>Bru (<i>bridge</i> in Norwegian) lets you read and send SMSes from your browser (TOOD: or desktop?), via your Android phone. It does
+    <p>Bru (<i>bridge</i> in Norwegian) lets you read and send SMSes from your browser (TOOD: or desktop?), via your
+      Android phone. It does
       this
       by creating an end-to-end encrypted persistent connection to a companion app running as a background
       service on your phone.</p>
@@ -28,7 +29,7 @@
       </li>
       <li><b>Fully local.</b> No personal data is stored outside of your devices.</li>
       <li><b>Hole punching.</b> Works from behind routers and firewalls. No port forwarding or fiddeling with NAT.</li>
-        <li>More? TODO</li>
+      <li>More? TODO</li>
     </ul>
 
     <h2>How does it work?</h2>
@@ -36,17 +37,17 @@
       computer and phone.<sup>*</sup></p>
     <p>As long as the devices are online, Iroh finds a way to connect them, falling back to using a relay if a direct
       link is not possible. Your data is in any case still encrypted and not readable by anyone.</p>
-    
-    <p class="dumb-joke"><sup>*</sup>This project is not related to the <a src="https://en.wikipedia.org/wiki/Irn-Bru">second
+
+    <p class="dumb-joke"><sup>*</sup>This project is not related to the <a
+        src="https://en.wikipedia.org/wiki/Irn-Bru">second
         Scottish national drink.</a></p>
 
     <h2>Get started</h2>
-    <button id="clearBtn">Clear data</button>
     <p>Install the companion app and pair the phone by scanning the QR-code below.<a href="https://todo.todo"></a>.</p>
     <pre id="out">loading wasm…</pre>
     <div id="qr"></div>
-    <p>Browser identifier: 
-    <span id="sessionName"></span>
+    <p>Browser identifier:
+      <span id="sessionName"></span>
     </p>
     <span id="phoneId">Waiting for pairing...</span>
   </main>
@@ -62,15 +63,16 @@
 
 
   import init, { bru_init, bru_online, generate_pairing_code, accept_pairing } from './pkg/bru_web.js';
-  import { key, name } from './util.js';
+  import { key, phoneKey, name } from './util.js';
 
   const out = document.getElementById('out');
   const qr = document.getElementById('qr');
   const sessionName = document.getElementById('sessionName');
   const phoneId = document.getElementById('phoneId');
-  const clearBtn = document.getElementById('clearBtn');
 
-  clearBtn.onclick = () => {localStorage.clear();}
+  if (phoneKey()) {
+    window.location.href = "/phone"
+  }
 
 
 
@@ -98,7 +100,12 @@
     let phone = await accept_pairing();
 
     phoneId.textContent = phone;
-    
+    localStorage.setItem('bru.phoneKey', phone);
+
+    if (phone) {
+      window.location.href = "/phone"
+    }
+
 
   } catch (e) {
     printToDOM(`failed: ${e}`);

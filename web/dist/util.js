@@ -29,5 +29,13 @@ export const key = () => {
   return fresh;
 };
 
+export const phoneKey = () => {
+  const stored = localStorage.getItem('bru.phoneKey');
+  if (!stored) {
+    return null;
+  }
+  return stored;
+}
+
 export const name = (keyBytes) =>
   `${pick(ADJECTIVES, keyBytes[0])}-${pick(COLORS, keyBytes[1])}-${pick(NOUNS, keyBytes[2])}`;
