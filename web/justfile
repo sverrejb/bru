@@ -1,16 +1,16 @@
 default:
     @just --list
 
-# Build the wasm module into web/pkg (committed, since Netlify cannot build it)
+# Build the wasm module into web/dist/pkg (committed, since Netlify cannot build it)
 build:
-    wasm-pack build --target web --no-pack --no-typescript --release
-    rm -f pkg/.gitignore
+    wasm-pack build --target web --no-pack --no-typescript --release --out-dir dist/pkg
+    rm -f dist/pkg/.gitignore
 
 serve: build
-    (sleep 1; open http://localhost:8123) & python3 -m http.server 8123
+    (sleep 1; open http://localhost:8123) & python3 -m http.server 8123 --directory dist
 
 watch:
     ls Cargo.toml src/*.rs | entr -c just build
 
 clean:
-    rm -rf pkg target
+    rm -rf dist/pkg target

@@ -35,10 +35,17 @@ pub async fn bru_online() -> Result<(), JsError> {
 }
 
 #[wasm_bindgen]
-pub fn generate_pairing_code(text: &str) -> Result<String, JsError> {
-    let code = QrCode::new(text).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
+pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
+    let id: String = ENDPOINT
+        .with_borrow(|slot| slot.as_ref().map(|e| e.id().to_string()))
+        .ok_or_else(|| JsError::new("bru_init not called"))?;
+    let pairing_string = format!("https://bru.works#d={}&n={}", id, name);
+
+    let code = QrCode::new(&pairing_string).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
+   
     Ok(code
         .render::<svg::Color>()
         .min_dimensions(512, 512)
+        .light_color(svg::Color("#0000"))
         .build())
 }

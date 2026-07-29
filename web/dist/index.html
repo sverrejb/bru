@@ -5,50 +5,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>bru - The link to your phone</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #f7f5f0;
-      color: #3d3a35;
-      font-family: "Courier New", Courier, monospace;
-    }
-
-    body {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    h1 {
-      font-size: 3rem;
-      font-weight: normal;
-      letter-spacing: 0.3em;
-      margin: 0 0 1rem;
-      font-weight: bolder;
-    }
-
-    p {
-      font-size: 1rem;
-      letter-spacing: 0.05em;
-      margin: 0.5rem 0;
-    }
-
-    .dumb-joke {
-      font-size: 0.6rem;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <header>
-    <h1>bru</h1>
+    <h1>Bru</h1>
     <p>Bidirectional Remote Uplink</p>
 
   </header>
   <main>
 
     <h2>What is Bru?</h2>
-    <p>Bru (<i>bridge</i> in Norwegian) lets you read and send SMSes from your computer, via your Android phone. It does
+    <p>Bru (<i>bridge</i> in Norwegian) lets you read and send SMSes from your browser (TOOD: or desktop?), via your Android phone. It does
       this
       by creating an end-to-end encrypted persistent connection to a companion app running as a background
       service on your phone.</p>
@@ -100,6 +69,14 @@
     return fresh;
   };
 
+  const name = () => {
+    const stored = localStorage.getItem('bru.name');
+    if (stored) return stored;
+    const fresh = crypto.randomUUID().slice(0, 8);
+    localStorage.setItem('bru.name', fresh);
+    return fresh;
+  };
+
   try {
     await init();
     out.textContent = 'binding iroh endpoint…';
@@ -112,7 +89,7 @@
     ]);
     printToDOM('iroh connection is up');
 
-    const svgString = generate_pairing_code(endpointId);
+    const svgString = generate_pairing_code(name());
     qr.insertAdjacentHTML('beforeend', svgString);
 
   } catch (e) {

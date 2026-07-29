@@ -1,0 +1,37 @@
+body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f7f5f0;
+      color: #3d3a35;
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    body {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: normal;
+      letter-spacing: 0.3em;
+      margin: 0 0 1rem;
+      font-weight: bolder;
+    }
+
+    p {
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      margin: 0.5rem 0;
+    }
+
+    .dumb-joke {
+      font-size: 0.6rem;
+    }
+
+    #qr svg {
+      width: 100%;
+      height: auto;
+      max-width: 300px;
+    }
