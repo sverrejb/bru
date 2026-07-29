@@ -73,10 +73,55 @@
 
     <h2>Get started</h2>
     <p>Install the companion app and pair the phone by scanning the QR-code below.<a href="https://todo.todo"></a>.</p>
-    <div>
-      TODO: Generate QR code
-    </div>
+    <pre id="out">loading wasm…</pre>
+    <div id="qr"></div>
   </main>
 </body>
+
+<script type="module">
+  import init, { bru_init, bru_online, generate_pairing_code } from './pkg/bru_web.js';
+
+  const out = document.getElementById('out');
+  const qr = document.getElementById('qr');
+  const printToDOM = (line) => { out.textContent += `\n${line}`; };
+
+  // ugly hot reload hack 
+  const stamp = async () =>
+    (await fetch('./pkg/bru_web_bg.wasm', { method: 'HEAD', cache: 'no-store' })).headers.get('last-modified');
+
+  const built = await stamp();
+  setInterval(async () => { if (await stamp() !== built) location.reload(); }, 1000);
+
+  const key = () => {
+    const stored = localStorage.getItem('bru.key');
+    if (stored) return Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
+    const fresh = crypto.getRandomValues(new Uint8Array(32));
+    localStorage.setItem('bru.key', btoa(String.fromCharCode(...fresh)));
+    return fresh;
+  };
+
+  try {
+    await init();
+    out.textContent = 'binding iroh endpoint…';
+    const endpointId = await bru_init(key());
+    printToDOM(endpointId);
+    printToDOM('reaching relay…');
+    await Promise.race([
+      bru_online(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('no relay after 15s')), 15_000)),
+    ]);
+    printToDOM('iroh connection is up');
+
+    const svgString = generate_pairing_code(endpointId);
+    qr.insertAdjacentHTML('beforeend', svgString);
+
+  } catch (e) {
+    printToDOM(`failed: ${e}`);
+  }
+
+
+
+</script>
+
 
 </html>
