@@ -35,6 +35,28 @@ pub async fn bru_online() -> Result<(), JsError> {
 }
 
 #[wasm_bindgen]
+pub async fn accept_pairing() -> Result<String, JsError> {
+    let endpoint = ENDPOINT
+        .with_borrow(|slot| slot.clone())
+        .ok_or_else(|| JsError::new("bru_init not called"))?;
+
+    let incoming = endpoint
+        .accept()
+        .await
+        .ok_or_else(|| JsError::new("endpoint closed"))?;
+    let conn = incoming.await.map_err(|e| JsError::new(&e.to_string()))?;
+    let phone_id = conn.remote_id().to_string();
+
+    let (mut send, mut recv) = conn.accept_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
+    recv.read_to_end(4096).await.map_err(|e| JsError::new(&e.to_string()))?;
+    send.write_all(br#"{"ok":true}"#).await.map_err(|e| JsError::new(&e.to_string()))?;
+    send.finish().map_err(|e| JsError::new(&e.to_string()))?;
+    conn.closed().await;
+
+    Ok(phone_id)
+}
+
+#[wasm_bindgen]
 pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
     let id: String = ENDPOINT
         .with_borrow(|slot| slot.as_ref().map(|e| e.id().to_string()))

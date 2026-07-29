@@ -41,31 +41,40 @@
         Scottish national drink.</a></p>
 
     <h2>Get started</h2>
+    <button id="clearBtn">Clear data</button>
     <p>Install the companion app and pair the phone by scanning the QR-code below.<a href="https://todo.todo"></a>.</p>
     <pre id="out">loading wasm…</pre>
     <div id="qr"></div>
     <p>Browser identifier: 
     <span id="sessionName"></span>
     </p>
+    <span id="phoneId">Waiting for pairing...</span>
   </main>
 </body>
 
 <script type="module">
-  import init, { bru_init, bru_online, generate_pairing_code } from './pkg/bru_web.js';
-  import { key, name } from './util.js';
-
-  const out = document.getElementById('out');
-  const qr = document.getElementById('qr');
-  const sessionName = document.getElementById('sessionName');
-
-  const printToDOM = (line) => { out.textContent += `\n${line}`; };
-
   // ugly hot reload hack 
   const stamp = async () =>
     (await fetch('./pkg/bru_web_bg.wasm', { method: 'HEAD', cache: 'no-store' })).headers.get('last-modified');
 
   const built = await stamp();
   setInterval(async () => { if (await stamp() !== built) location.reload(); }, 1000);
+
+
+  import init, { bru_init, bru_online, generate_pairing_code, accept_pairing } from './pkg/bru_web.js';
+  import { key, name } from './util.js';
+
+  const out = document.getElementById('out');
+  const qr = document.getElementById('qr');
+  const sessionName = document.getElementById('sessionName');
+  const phoneId = document.getElementById('phoneId');
+  const clearBtn = document.getElementById('clearBtn');
+
+  clearBtn.onclick = () => {localStorage.clear();}
+
+
+
+  const printToDOM = (line) => { out.textContent += `\n${line}`; };
 
   try {
     await init();
@@ -85,6 +94,11 @@
     qr.insertAdjacentHTML('beforeend', svgString);
 
     sessionName.textContent = sessionNameValue;
+
+    let phone = await accept_pairing();
+
+    phoneId.textContent = phone;
+    
 
   } catch (e) {
     printToDOM(`failed: ${e}`);
