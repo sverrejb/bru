@@ -8,27 +8,34 @@
     <link rel="stylesheet" href="../style.css">
 </head>
 
-<body>
-    <header>
-        <h1>Your phone</h1>
-    </header>
-    <main>
-        <div class="card">
-            <div>
-                <p>Client name: <span id="clientName"></span></p>
-                <p>Client id: <span id="clientId"></span></p>
+<body class="wide">
+    <div class="layout">
+        <aside class="sidebar">
+            <h1>Your phone</h1>
+            <div class="card">
+                <div>
+                    <p>Client name: <span id="clientName"></span></p>
+                    <p>Client id: <span id="clientId"></span></p>
+                </div>
+
+                <hr>
+
+                <div>
+                    <p>Phone name: <span id="phoneName"></span></p>
+                    <p>Phone id: <span id="phoneId">none</span></p>
+                </div>
+
+                <button id="clearBtn">Clear all data</button>
             </div>
+        </aside>
 
-            <hr>
-
-            <div>
-                <p>Phone name: <span id="phoneName"></span></p>
-                <p>Phone id: <span id="phoneId">none</span></p>
+        <main>
+            <h2>Messages</h2>
+            <div class="card">
+                TODO: Implement message UI (the rest of the fucking owl)
             </div>
-
-            <button id="clearBtn">Clear all data</button>
-        </div>
-    </main>
+        </main>
+    </div>
 </body>
 
 <script type="module">

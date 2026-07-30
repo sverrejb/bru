@@ -1,20 +1,15 @@
 body {
-      margin: 0;
       min-height: 100vh;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
       background: #f7f5f0;
       color: #3d3a35;
       font-family: "Courier New", Courier, monospace;
     }
 
-    body {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-
     h1 {
       font-size: 3rem;
-      font-weight: normal;
       letter-spacing: 0.05em;
       margin: 0 0 1rem;
       font-weight: bolder;
@@ -36,9 +31,43 @@ body {
       max-width: 500px;
     }
 
-    .card {
+    body.wide {
+      max-width: 1600px;
+    }
+
+    .layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+    }
+
+    .layout .sidebar {
+      flex: 0 0 320px;
+    }
+
+    .layout main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    @media (max-width: 700px) {
+      .layout {
+        flex-direction: column;
+      }
+
+      .layout .sidebar {
+        flex-basis: auto;
+        width: 100%;
+      }
+    }
+
+    .card,
+    #clearBtn {
       border: 2px solid #3d3a35;
       border-radius: 4px;
+    }
+
+    .card {
       padding: 1rem 1.25rem;
       margin: 1rem 0;
       background: #fffdf8;
@@ -62,10 +91,7 @@ body {
       text-transform: uppercase;
       color: #f7f5f0;
       background: #a8402a;
-      border: 2px solid #3d3a35;
-      border-radius: 4px;
       cursor: pointer;
-
     }
 
     #clearBtn::before {
