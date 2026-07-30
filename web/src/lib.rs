@@ -84,7 +84,10 @@ async fn request(phone_id: &str, req: &[u8]) -> Result<String, JsError> {
 
 #[wasm_bindgen]
 pub async fn bru_health(phone_id: &str) -> Result<String, JsError> {
-    request(phone_id, br#"{"op":"health"}"#).await
+    request(phone_id, br#"{"op":"health"}"#)
+        .await
+        .inspect(|s| log(s))
+        .inspect_err(|e| log(&format!("{e:?}")))
 }
 
 #[wasm_bindgen]

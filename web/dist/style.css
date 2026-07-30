@@ -33,6 +33,11 @@ body {
       font-size: 0.75rem;
     }
 
+    .error {
+      color: #a8402a;
+      font-weight: bolder;
+    }
+
     #qr svg {
       width: 100%;
       height: auto;

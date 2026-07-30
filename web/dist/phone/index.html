@@ -10,6 +10,7 @@
 
 <body class="wide">
     <h1>Your phone</h1>
+    <p id="healthError" class="error" hidden></p>
     <div class="layout">
 
         <main>
@@ -42,6 +43,9 @@
 
                 <button id="clearBtn">Clear all data</button>
             </div>
+            <div class="card">
+                TODO: Two-way copypaste
+            </div>
         </aside>
     </div>
 
@@ -71,7 +75,7 @@
     const threadRowTpl = document.getElementById('threadRowTpl');
     const messageRowTpl = document.getElementById('messageRowTpl');
 
-    import init, { bru_init, get_messages } from '../pkg/bru_web.js';
+    import init, { bru_init, bru_health, get_messages } from '../pkg/bru_web.js';
 
     if (!phoneKey()) {
         window.location.href = "/"
@@ -91,6 +95,8 @@
 
     let selectedRow;
 
+    checkHealth();
+
     const threads = await getMessages();
 
     renderMessagesUI();
@@ -103,7 +109,7 @@
             .sort((a, b) => b.date - a.date);
 
         if (lastMessages.length === 0) {
-            messageListEl.textContent = 'No messages yet.';
+            messageListEl.textContent = 'No messages yet. Try refreshing in a little while. If that does not work, delete data and try again.';
             return;
         }
 
@@ -166,6 +172,20 @@
         return threads;
     }
 
+
+    async function checkHealth() {
+        const healthError = document.getElementById('healthError');
+        try {
+            const health = JSON.parse(await bru_health(phoneKey()));
+            if (health.status !== 'ok') {
+                healthError.textContent = `Phone reported status: ${health.status}`;
+                healthError.hidden = false;
+            }
+        } catch (e) {
+            healthError.textContent = 'Could not reach phone.';
+            healthError.hidden = false;
+        }
+    }
 
     function setId(el, id) {
         el.textContent = id;
