@@ -1,10 +1,18 @@
+:root {
+  --text-color: #3d3a35;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
       min-height: 100vh;
       max-width: 800px;
       margin: 0 auto;
       padding: 1rem;
       background: #f7f5f0;
-      color: #3d3a35;
+      color: var(--text-color);
       font-family: "Courier New", Courier, monospace;
     }
 
@@ -52,14 +60,27 @@ body {
       min-width: 0;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 800px) {
       .layout {
-        flex-direction: column;
+        flex-direction: column-reverse;
       }
 
       .layout .sidebar {
         flex-basis: auto;
         width: 100%;
+      }
+
+      .messages-layout {
+        flex-direction: column;
+      }
+
+      .thread-list {
+        flex-basis: auto;
+        max-height: 30vh;
+        border-right: none;
+        padding-right: 0;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
       }
     }
 
@@ -80,12 +101,16 @@ body {
       min-width: 0;
     }
 
-    .id {
-      flex: 1;
-      min-width: 0;
+    .id,
+    .thread-preview {
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
+    }
+
+    .id {
+      flex: 1;
+      min-width: 0;
     }
 
     .card hr {
@@ -93,6 +118,81 @@ body {
       border-top: 1px solid #3d3a35;
       opacity: 0.3;
       margin: 1rem 0;
+    }
+
+    .messages-layout {
+      display: flex;
+      gap: 1.25rem;
+    }
+
+    .thread-list {
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+      max-height: 70vh;
+      overflow-y: auto;
+      flex: 0 0 220px;
+      border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
+      padding-right: 1.25rem;
+    }
+
+    .message-column {
+      flex: 1;
+      min-width: 0;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #messageList {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .thread-row {
+      cursor: pointer;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
+    }
+
+    .thread-row:last-child {
+      border-bottom: none;
+    }
+
+    .thread-row.selected {
+      background: color-mix(in srgb, var(--text-color) 8%, transparent);
+    }
+
+    .thread-name {
+      font-weight: bolder;
+    }
+
+    .thread-preview {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .message-row {
+      max-width: 75%;
+      margin: 0.5rem 0;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--text-color) 6%, transparent);
+    }
+
+    .message-row.out {
+      margin-left: auto;
+      background: color-mix(in srgb, var(--text-color) 14%, transparent);
+    }
+
+    .message-meta {
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      opacity: 0.6;
     }
 
     #clearBtn {
@@ -120,3 +220,51 @@ body {
     #clearBtn:active {
       transform: translateY(1px);
     }
+
+/* LOADER */
+.loader {
+  --size: 1.7px;
+
+  width: calc(8 * var(--size));
+  height: calc(48 * var(--size));
+  display: block;
+  margin: 1rem auto;
+  border-radius: calc(4 * var(--size));
+  color: var(--text-color);
+  animation: animloader 1.5s linear infinite;
+  transform: translateX(calc(-40 * var(--size)));
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow:
+      calc(20 * var(--size)) calc(-10 * var(--size)),
+      calc(40 * var(--size)) calc(10 * var(--size)),
+      calc(60 * var(--size)) 0;
+  }
+  25% {
+    box-shadow:
+      calc(20 * var(--size)) 0,
+      calc(40 * var(--size)) 0,
+      calc(60 * var(--size)) calc(10 * var(--size));
+  }
+  50% {
+    box-shadow:
+      calc(20 * var(--size)) calc(10 * var(--size)),
+      calc(40 * var(--size)) calc(-10 * var(--size)),
+      calc(60 * var(--size)) 0;
+  }
+  75% {
+    box-shadow:
+      calc(20 * var(--size)) 0,
+      calc(40 * var(--size)) 0,
+      calc(60 * var(--size)) calc(-10 * var(--size));
+  }
+  100% {
+    box-shadow:
+      calc(20 * var(--size)) calc(-10 * var(--size)),
+      calc(40 * var(--size)) calc(10 * var(--size)),
+      calc(60 * var(--size)) 0;
+  }
+}
+/* END LOADER */

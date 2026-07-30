@@ -11,10 +11,20 @@
 <body class="wide">
     <h1>Your phone</h1>
     <div class="layout">
-        
+
         <main>
-            <div class="card">
-                TODO: Implement message UI (the rest of the fucking owl)
+            <div class="card" id="messagesUI">
+                <div class="messages-layout">
+                    <ul id="threadList" class="thread-list"></ul>
+                    <div class="message-column">
+                        <ul id="messageList">
+                            <li class="loader-row"><span class="loader"></span></li>
+                        </ul>
+                        <div class="card sendUI">
+                            todo: Send SMS UI
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -24,9 +34,7 @@
                     <p>Client name: <span id="clientName"></span></p>
                     <p class="id-row">Client id: <span id="clientId" class="id"></span></p>
                 </div>
-
                 <hr>
-
                 <div>
                     <p>Phone name: <span id="phoneName"></span></p>
                     <p class="id-row">Phone id: <span id="phoneId" class="id">none</span></p>
@@ -36,6 +44,20 @@
             </div>
         </aside>
     </div>
+
+    <template id="threadRowTpl">
+        <li class="thread-row">
+            <div class="thread-name"></div>
+            <div class="thread-preview"></div>
+        </li>
+    </template>
+
+    <template id="messageRowTpl">
+        <li class="message-row">
+            <div class="message-body"></div>
+            <div class="message-meta"></div>
+        </li>
+    </template>
 </body>
 
 <script type="module">
@@ -44,65 +66,118 @@
     const clientIdEl = document.getElementById('clientId');
     const phoneNameEl = document.getElementById('phoneName');
     const phoneId = document.getElementById('phoneId');
+    const threadListEl = document.getElementById('threadList');
+    const messageListEl = document.getElementById('messageList');
+    const threadRowTpl = document.getElementById('threadRowTpl');
+    const messageRowTpl = document.getElementById('messageRowTpl');
 
-    import init, { bru_health, bru_init, get_messages } from '../pkg/bru_web.js';
+    import init, { bru_init, get_messages } from '../pkg/bru_web.js';
 
-    await init();
-    const keyBytes = key();
-
-    console.log(keyBytes);
-    const endpointId = await bru_init(keyBytes);
-
-    async function getMessages() {
-        const messages = [];
-        let threads = {};
-        let since = 0;
-        let page;
-
-        do {
-            console.log(since);
-            page = JSON.parse(await get_messages(phoneKey(), since, 500));
-            messages.push(...page.messages);
-            since = page.cursor;
-        } while (page.hasMore);
-
-
-        messages.forEach(element => {
-            (threads[element.threadId] ??= []).push(element);
-        });
-
-        console.log(threads);
-
-        return threads;
-    }
-
-
-    const clearBtn = document.getElementById('clearBtn');
     if (!phoneKey()) {
         window.location.href = "/"
     }
 
-    const setId = (el, id) => {
-        el.textContent = id;
-        el.title = id;
-    };
+    await init();
+    const keyBytes = key();
+    await bru_init(keyBytes);
 
     setId(phoneId, phoneKey());
     setId(clientIdEl, clientId());
     phoneNameEl.textContent = phoneName();
     clientName.textContent = name();
 
-    clearBtn.onclick = () => {
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.onclick = clearData;
+
+    let selectedRow;
+
+    const threads = await getMessages();
+
+    renderMessagesUI();
+
+    //FUNCTIONS BELOW HERE
+
+    function renderMessagesUI() {
+        const lastMessages = Object.values(threads)
+            .map(msgs => msgs[msgs.length - 1])
+            .sort((a, b) => b.date - a.date);
+
+        if (lastMessages.length === 0) {
+            messageListEl.textContent = 'No messages yet.';
+            return;
+        }
+
+        threadListEl.onclick = (e) => {
+            const row = e.target.closest('.thread-row');
+            if (row) selectThread(row);
+        };
+
+        renderList(threadListEl, threadRowTpl, lastMessages, (node, last) => {
+            node.querySelector('.thread-row').dataset.threadId = last.threadId;
+            node.querySelector('.thread-name').textContent = last.displayName || last.address;
+            node.querySelector('.thread-preview').textContent = last.body;
+        });
+
+        selectThread(threadListEl.querySelector('.thread-row'));
+    }
+
+    function selectThread(row) {
+        selectedRow?.classList.remove('selected');
+        selectedRow = row;
+        selectedRow.classList.add('selected');
+        renderMessages(threads[row.dataset.threadId]);
+    }
+
+    function renderMessages(messages) {
+        messageListEl.innerHTML = '';
+        renderList(messageListEl, messageRowTpl, messages, (node, message) => {
+            node.querySelector('.message-row').classList.add(message.direction);
+            node.querySelector('.message-body').textContent = message.body;
+            node.querySelector('.message-meta').textContent = new Date(message.date).toLocaleString();
+        });
+        messageListEl.scrollTop = messageListEl.scrollHeight;
+    }
+
+    function renderList(container, template, items, populate) {
+        items.forEach(item => {
+            const node = template.content.cloneNode(true);
+            populate(node, item);
+            container.appendChild(node);
+        });
+    }
+
+    async function getMessages() {
+        const cached = JSON.parse(localStorage.getItem('bru.messages') ?? '[]');
+        let since = Number(localStorage.getItem('bru.messageCursor') ?? 0);
+        const pk = phoneKey();
+        let page;
+
+        do {
+            page = JSON.parse(await get_messages(pk, since, 500));
+            cached.push(...page.messages);
+            since = page.cursor;
+        } while (page.hasMore);
+
+        localStorage.setItem('bru.messages', JSON.stringify(cached));
+        localStorage.setItem('bru.messageCursor', since);
+
+        const threads = {};
+        cached.forEach(m => (threads[m.threadId] ??= []).push(m));
+        return threads;
+    }
+
+
+    function setId(el, id) {
+        el.textContent = id;
+        el.title = id;
+    };
+
+    function clearData() {
         if (confirm("Delete all data?")) {
             localStorage.clear();
             window.location.href = "/"
         }
     }
-
-
-    let health = await bru_health(phoneKey());
-
-    getMessages();
 
 
 </script>
