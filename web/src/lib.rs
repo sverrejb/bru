@@ -55,12 +55,13 @@ pub async fn accept_pairing() -> Result<String, JsError> {
 
     let (mut send, mut recv) = conn.accept_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
     let bytes = recv.read_to_end(4096).await.map_err(|e| JsError::new(&e.to_string()))?;
-    log(&String::from_utf8_lossy(&bytes));
+    let message = String::from_utf8_lossy(&bytes);
+    log(&message);
     send.write_all(br#"{"ok":true}"#).await.map_err(|e| JsError::new(&e.to_string()))?;
     send.finish().map_err(|e| JsError::new(&e.to_string()))?;
     conn.closed().await;
 
-    Ok(phone_id)
+    Ok(format!(r#"{{"id":"{phone_id}","message":{message}}}"#))
 }
 
 #[wasm_bindgen]

@@ -37,5 +37,11 @@ export const phoneKey = () => {
   return stored;
 }
 
-export const name = (keyBytes) =>
-  `${pick(ADJECTIVES, keyBytes[0])}-${pick(COLORS, keyBytes[1])}-${pick(NOUNS, keyBytes[2])}`;
+export const phoneName = () => localStorage.getItem('bru.phoneName');
+
+export const clientId = () => localStorage.getItem('bru.clientId');
+
+export const name = () => {
+  const keyBytes = key();
+  return `${pick(ADJECTIVES, keyBytes[0])}-${pick(COLORS, keyBytes[1])}-${pick(NOUNS, keyBytes[2])}`;
+}

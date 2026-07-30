@@ -10,24 +10,48 @@
 
 <body>
     <header>
-        <h1>Bru</h1>
-        <p>Paired phone</p>
+        <h1>Your phone</h1>
     </header>
     <main>
-        <p>Phone id: <span id="phoneId">none</span></p>
-        <button id="clearBtn">Clear data</button>
+        <div class="card">
+            <div>
+                <p>Client name: <span id="clientName"></span></p>
+                <p>Client id: <span id="clientId"></span></p>
+            </div>
+
+            <hr>
+
+            <div>
+                <p>Phone name: <span id="phoneName"></span></p>
+                <p>Phone id: <span id="phoneId">none</span></p>
+            </div>
+
+            <button id="clearBtn">Clear all data</button>
+        </div>
     </main>
 </body>
 
 <script type="module">
-    import { key, phoneKey, name } from '../util.js';
+    import { key, phoneKey, phoneName, name, clientId } from '../util.js';
+    const clientName = document.getElementById('clientName');
+    const clientIdEl = document.getElementById('clientId');
+    const phoneNameEl = document.getElementById('phoneName');
     const phoneId = document.getElementById('phoneId');
+
+
     const clearBtn = document.getElementById('clearBtn');
     if (!phoneKey()) {
         window.location.href = "/"
     }
     phoneId.textContent = phoneKey();
-    clearBtn.onclick = () => localStorage.clear();
+    phoneNameEl.textContent = phoneName();
+    clientName.textContent = name();
+    clientIdEl.textContent = clientId();
+
+    clearBtn.onclick = () => {
+        if (confirm("Delete all data?")) localStorage.clear();
+        window.location.href = "/"        
+    }
 
 
 

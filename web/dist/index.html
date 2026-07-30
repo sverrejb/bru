@@ -82,8 +82,9 @@
     await init();
     out.textContent = 'binding iroh endpoint…';
     const keyBytes = key();
-    const sessionNameValue = name(keyBytes);
+    const sessionNameValue = name();
     const endpointId = await bru_init(keyBytes);
+    localStorage.setItem('bru.clientId', endpointId);
     printToDOM(endpointId);
     printToDOM('reaching relay…');
     await Promise.race([
@@ -97,10 +98,11 @@
 
     sessionName.textContent = sessionNameValue;
 
-    let phone = await accept_pairing();
+    const { id: phone, message } = JSON.parse(await accept_pairing());
 
     phoneId.textContent = phone;
     localStorage.setItem('bru.phoneKey', phone);
+    localStorage.setItem('bru.phoneName', message.name);
 
     if (phone) {
       window.location.href = "/phone"
