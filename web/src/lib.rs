@@ -93,7 +93,7 @@ pub async fn bru_health(phone_id: &str) -> Result<String, JsError> {
 #[wasm_bindgen]
 pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
     let id = endpoint()?.id().to_string();
-    let pairing_string = format!("https://bru.works#d={}&n={}", id, name);
+    let pairing_string = format!("https://bru.works/pair#d={}&n={}", id, name);
     let code = QrCode::new(&pairing_string).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
 
     Ok(code
