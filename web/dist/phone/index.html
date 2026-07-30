@@ -9,32 +9,33 @@
 </head>
 
 <body class="wide">
+    <h1>Your phone</h1>
     <div class="layout">
+        
+
+        <main>
+            <div class="card">
+                TODO: Implement message UI (the rest of the fucking owl)
+            </div>
+        </main>
+
         <aside class="sidebar">
-            <h1>Your phone</h1>
             <div class="card">
                 <div>
                     <p>Client name: <span id="clientName"></span></p>
-                    <p>Client id: <span id="clientId"></span></p>
+                    <p class="id-row">Client id: <span id="clientId" class="id"></span></p>
                 </div>
 
                 <hr>
 
                 <div>
                     <p>Phone name: <span id="phoneName"></span></p>
-                    <p>Phone id: <span id="phoneId">none</span></p>
+                    <p class="id-row">Phone id: <span id="phoneId" class="id">none</span></p>
                 </div>
 
                 <button id="clearBtn">Clear all data</button>
             </div>
         </aside>
-
-        <main>
-            <h2>Messages</h2>
-            <div class="card">
-                TODO: Implement message UI (the rest of the fucking owl)
-            </div>
-        </main>
     </div>
 </body>
 
@@ -50,10 +51,16 @@
     if (!phoneKey()) {
         window.location.href = "/"
     }
-    phoneId.textContent = phoneKey();
+
+    const setId = (el, id) => {
+        el.textContent = id;
+        el.title = id;
+    };
+
+    setId(phoneId, phoneKey());
+    setId(clientIdEl, clientId());
     phoneNameEl.textContent = phoneName();
     clientName.textContent = name();
-    clientIdEl.textContent = clientId();
 
     clearBtn.onclick = () => {
         if (confirm("Delete all data?")) {

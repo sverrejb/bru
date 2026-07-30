@@ -42,7 +42,9 @@ body {
     }
 
     .layout .sidebar {
-      flex: 0 0 320px;
+      flex: 0 1 auto;
+      max-width: 30%;
+      min-width: 0;
     }
 
     .layout main {
@@ -71,6 +73,19 @@ body {
       padding: 1rem 1.25rem;
       margin: 1rem 0;
       background: #fffdf8;
+    }
+
+    .id-row {
+      display: flex;
+      min-width: 0;
+    }
+
+    .id {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .card hr {
