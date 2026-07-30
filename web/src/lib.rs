@@ -99,4 +99,8 @@ pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
         .light_color(svg::Color("#0000"))
         .build())
 }
-    
+
+#[wasm_bindgen]
+pub async fn get_messages(phone_id: &str, since: u32, limit: u32) -> Result<String, JsError> {
+    request(phone_id, format!(r#"{{"op":"messages","since":{since},"limit":{limit}}}"#).as_bytes()).await
+}

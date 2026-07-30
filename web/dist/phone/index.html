@@ -12,7 +12,6 @@
     <h1>Your phone</h1>
     <div class="layout">
         
-
         <main>
             <div class="card">
                 TODO: Implement message UI (the rest of the fucking owl)
@@ -46,13 +45,36 @@
     const phoneNameEl = document.getElementById('phoneName');
     const phoneId = document.getElementById('phoneId');
 
-    import init, { bru_health, bru_init } from '../pkg/bru_web.js';
+    import init, { bru_health, bru_init, get_messages } from '../pkg/bru_web.js';
 
     await init();
     const keyBytes = key();
 
     console.log(keyBytes);
     const endpointId = await bru_init(keyBytes);
+
+    async function getMessages() {
+        const messages = [];
+        let threads = {};
+        let since = 0;
+        let page;
+
+        do {
+            console.log(since);
+            page = JSON.parse(await get_messages(phoneKey(), since, 500));
+            messages.push(...page.messages);
+            since = page.cursor;
+        } while (page.hasMore);
+
+
+        messages.forEach(element => {
+            (threads[element.threadId] ??= []).push(element);
+        });
+
+        console.log(threads);
+
+        return threads;
+    }
 
 
     const clearBtn = document.getElementById('clearBtn');
@@ -80,7 +102,8 @@
 
     let health = await bru_health(phoneKey());
 
-    console.log("health: ", health)
+    getMessages();
+
 
 </script>
 
