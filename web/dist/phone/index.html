@@ -56,8 +56,10 @@
     clientIdEl.textContent = clientId();
 
     clearBtn.onclick = () => {
-        if (confirm("Delete all data?")) localStorage.clear();
-        window.location.href = "/"        
+        if (confirm("Delete all data?")) {
+            localStorage.clear();
+            window.location.href = "/"
+        }
     }
 
 
