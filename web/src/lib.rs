@@ -1,9 +1,11 @@
 use std::cell::RefCell;
-use iroh::{Endpoint, SecretKey, endpoint::presets};
+use std::str::FromStr;
+use iroh::{Endpoint, EndpointId, SecretKey, endpoint::presets};
 use wasm_bindgen::prelude::*;
 use qrcode::{QrCode, render::svg};
 
 const ALPN: &[u8] = b"bru/1";
+const MAX_RESPONSE: usize = 16 * 1024 * 1024;
 
 #[wasm_bindgen]
 extern "C" {
@@ -13,6 +15,12 @@ extern "C" {
 
 thread_local! {
     static ENDPOINT: RefCell<Option<Endpoint>> = const { RefCell::new(None) };
+}
+
+fn endpoint() -> Result<Endpoint, JsError> {
+    ENDPOINT
+        .with_borrow(|slot| slot.clone())
+        .ok_or_else(|| JsError::new("bru_init not called"))
 }
 
 #[wasm_bindgen]
@@ -33,18 +41,14 @@ pub async fn bru_init(secret_key: &[u8]) -> Result<String, JsError> {
 
 #[wasm_bindgen]
 pub async fn bru_online() -> Result<(), JsError> {
-    let endpoint = ENDPOINT
-        .with_borrow(|slot| slot.clone())
-        .ok_or_else(|| JsError::new("bru_init not called"))?;
+    let endpoint = endpoint()?;
     endpoint.online().await;
     Ok(())
 }
 
 #[wasm_bindgen]
 pub async fn accept_pairing() -> Result<String, JsError> {
-    let endpoint = ENDPOINT
-        .with_borrow(|slot| slot.clone())
-        .ok_or_else(|| JsError::new("bru_init not called"))?;
+    let endpoint = endpoint()?;
 
     let incoming = endpoint
         .accept()
@@ -64,11 +68,28 @@ pub async fn accept_pairing() -> Result<String, JsError> {
     Ok(format!(r#"{{"id":"{phone_id}","message":{message}}}"#))
 }
 
+async fn request(phone_id: &str, req: &[u8]) -> Result<String, JsError> {
+    let endpoint = endpoint()?;
+    let id = EndpointId::from_str(phone_id).map_err(|e| JsError::new(&e.to_string()))?;
+
+    let conn = endpoint.connect(id, ALPN).await.map_err(|e| JsError::new(&e.to_string()))?;
+    let (mut send, mut recv) = conn.open_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
+    send.write_all(req).await.map_err(|e| JsError::new(&e.to_string()))?;
+    send.finish().map_err(|e| JsError::new(&e.to_string()))?;
+    let bytes = recv.read_to_end(MAX_RESPONSE).await.map_err(|e| JsError::new(&e.to_string()))?;
+    conn.close(0u32.into(), b"ok");
+
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}
+
+#[wasm_bindgen]
+pub async fn bru_health(phone_id: &str) -> Result<String, JsError> {
+    request(phone_id, br#"{"op":"health"}"#).await
+}
+
 #[wasm_bindgen]
 pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
-    let id: String = ENDPOINT
-        .with_borrow(|slot| slot.as_ref().map(|e| e.id().to_string()))
-        .ok_or_else(|| JsError::new("bru_init not called"))?;
+    let id = endpoint()?.id().to_string();
     let pairing_string = format!("https://bru.works#d={}&n={}", id, name);
     let code = QrCode::new(&pairing_string).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
 
@@ -78,3 +99,4 @@ pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
         .light_color(svg::Color("#0000"))
         .build())
 }
+    

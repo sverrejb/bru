@@ -46,6 +46,14 @@
     const phoneNameEl = document.getElementById('phoneName');
     const phoneId = document.getElementById('phoneId');
 
+    import init, { bru_health, bru_init } from '../pkg/bru_web.js';
+
+    await init();
+    const keyBytes = key();
+
+    console.log(keyBytes);
+    const endpointId = await bru_init(keyBytes);
+
 
     const clearBtn = document.getElementById('clearBtn');
     if (!phoneKey()) {
@@ -70,6 +78,9 @@
     }
 
 
+    let health = await bru_health(phoneKey());
+
+    console.log("health: ", health)
 
 </script>
 
