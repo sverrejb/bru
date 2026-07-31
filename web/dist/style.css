@@ -7,6 +7,8 @@
 }
 
 body {
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
       max-width: 800px;
       margin: 0 auto;
@@ -16,11 +18,20 @@ body {
       font-family: "Courier New", Courier, monospace;
     }
 
+    main {
+      flex: 1;
+    }
+
     h1 {
       font-size: 3rem;
       letter-spacing: 0.05em;
       margin: 0 0 1rem;
       font-weight: bolder;
+    }
+
+    header a {
+      color: inherit;
+      text-decoration: none;
     }
 
     .subtitle {

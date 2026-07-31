@@ -9,7 +9,14 @@
 </head>
 
 <body class="wide">
-    <h1>Your phone</h1>
+
+    <header>
+        <a href="/">
+            <h1>Bru</h1>
+        </a>
+    </header>
+
+    <h2>Your phone</h2>
     <p id="healthError" class="error" hidden></p>
     <div class="layout">
 
@@ -22,8 +29,8 @@
                             <li class="loader-row"><span class="loader"></span></li>
                         </ul>
                         <div class="card sendUI">
-                           <textarea name="smsBody" id="smsBody" placeholder="Send SMS to NAME HERE"></textarea>
-                           <button id="sendBtn" class="btn btn-accent">Send!</button>
+                            <textarea name="smsBody" id="smsBody" placeholder=""></textarea>
+                            <button id="sendBtn" class="btn btn-accent">Send!</button>
                         </div>
                     </div>
                 </div>
@@ -75,6 +82,7 @@
     const messageListEl = document.getElementById('messageList');
     const threadRowTpl = document.getElementById('threadRowTpl');
     const messageRowTpl = document.getElementById('messageRowTpl');
+    const smsBody = document.getElementById('smsBody');
 
     import init, { bru_init, bru_health, get_messages, send_message } from '../pkg/bru_web.js';
 
@@ -91,8 +99,7 @@
     phoneNameEl.textContent = phoneName();
     clientName.textContent = name();
 
-    const clearBtn = document.getElementById('clearBtn');
-    clearBtn.onclick = clearData;
+    document.getElementById('clearBtn').onclick = clearData;
 
     let selectedRow;
 
@@ -132,7 +139,10 @@
         selectedRow?.classList.remove('selected');
         selectedRow = row;
         selectedRow.classList.add('selected');
-        renderMessages(threads[row.dataset.threadId]);
+        const messages = threads[row.dataset.threadId];
+        const last = messages[messages.length - 1];
+        smsBody.placeholder = `Send SMS to ${last.displayName || last.address}`;
+        renderMessages(messages);
     }
 
     function renderMessages(messages) {
