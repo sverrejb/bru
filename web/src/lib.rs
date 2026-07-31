@@ -1,8 +1,8 @@
+use iroh::{Endpoint, EndpointId, SecretKey, endpoint::presets};
+use qrcode::{QrCode, render::svg};
 use std::cell::RefCell;
 use std::str::FromStr;
-use iroh::{Endpoint, EndpointId, SecretKey, endpoint::presets};
 use wasm_bindgen::prelude::*;
-use qrcode::{QrCode, render::svg};
 
 const ALPN: &[u8] = b"bru/1";
 const MAX_RESPONSE: usize = 16 * 1024 * 1024;
@@ -57,11 +57,19 @@ pub async fn accept_pairing() -> Result<String, JsError> {
     let conn = incoming.await.map_err(|e| JsError::new(&e.to_string()))?;
     let phone_id = conn.remote_id().to_string();
 
-    let (mut send, mut recv) = conn.accept_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
-    let bytes = recv.read_to_end(4096).await.map_err(|e| JsError::new(&e.to_string()))?;
+    let (mut send, mut recv) = conn
+        .accept_bi()
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let bytes = recv
+        .read_to_end(4096)
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
     let message = String::from_utf8_lossy(&bytes);
     log(&message);
-    send.write_all(br#"{"ok":true}"#).await.map_err(|e| JsError::new(&e.to_string()))?;
+    send.write_all(br#"{"ok":true}"#)
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
     send.finish().map_err(|e| JsError::new(&e.to_string()))?;
     conn.closed().await;
 
@@ -72,11 +80,22 @@ async fn request(phone_id: &str, req: &[u8]) -> Result<String, JsError> {
     let endpoint = endpoint()?;
     let id = EndpointId::from_str(phone_id).map_err(|e| JsError::new(&e.to_string()))?;
 
-    let conn = endpoint.connect(id, ALPN).await.map_err(|e| JsError::new(&e.to_string()))?;
-    let (mut send, mut recv) = conn.open_bi().await.map_err(|e| JsError::new(&e.to_string()))?;
-    send.write_all(req).await.map_err(|e| JsError::new(&e.to_string()))?;
+    let conn = endpoint
+        .connect(id, ALPN)
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    let (mut send, mut recv) = conn
+        .open_bi()
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
+    send.write_all(req)
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
     send.finish().map_err(|e| JsError::new(&e.to_string()))?;
-    let bytes = recv.read_to_end(MAX_RESPONSE).await.map_err(|e| JsError::new(&e.to_string()))?;
+    let bytes = recv
+        .read_to_end(MAX_RESPONSE)
+        .await
+        .map_err(|e| JsError::new(&e.to_string()))?;
     conn.close(0u32.into(), b"ok");
 
     Ok(String::from_utf8_lossy(&bytes).into_owned())
@@ -94,7 +113,8 @@ pub async fn bru_health(phone_id: &str) -> Result<String, JsError> {
 pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
     let id = endpoint()?.id().to_string();
     let pairing_string = format!("https://bru.works/pair#d={}&n={}", id, name);
-    let code = QrCode::new(&pairing_string).map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
+    let code = QrCode::new(&pairing_string)
+        .map_err(|e| JsError::new(&format!("QR encode failed: {e}")))?;
 
     Ok(code
         .render::<svg::Color>()
@@ -105,5 +125,24 @@ pub fn generate_pairing_code(name: &str) -> Result<String, JsError> {
 
 #[wasm_bindgen]
 pub async fn get_messages(phone_id: &str, since: u32, limit: u32) -> Result<String, JsError> {
-    request(phone_id, format!(r#"{{"op":"messages","since":{since},"limit":{limit}}}"#).as_bytes()).await
+    request(
+        phone_id,
+        format!(r#"{{"op":"messages","since":{since},"limit":{limit}}}"#).as_bytes(),
+    )
+    .await
+}
+
+ #[wasm_bindgen] 
+pub async fn send_message(
+    phone_id: &str,
+    to: &str,
+    body: &str,
+    client_id: &str,
+) -> Result<String, JsError> {
+    request(
+        phone_id,
+        format!(r#"{{"op":"send","to":{to:?},"body":{body:?},"clientId":{client_id:?}}}"#)
+            .as_bytes(),
+    )
+    .await
 }

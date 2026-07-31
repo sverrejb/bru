@@ -22,7 +22,8 @@
                             <li class="loader-row"><span class="loader"></span></li>
                         </ul>
                         <div class="card sendUI">
-                            todo: Send SMS UI
+                           <textarea name="smsBody" id="smsBody" placeholder="Send SMS to NAME HERE"></textarea>
+                           <button id="sendBtn" class="btn btn-accent">Send!</button>
                         </div>
                     </div>
                 </div>
@@ -41,7 +42,7 @@
                     <p class="id-row">Phone id: <span id="phoneId" class="id">none</span></p>
                 </div>
 
-                <button id="clearBtn">Clear all data</button>
+                <button id="clearBtn" class="btn">Clear all data</button>
             </div>
             <div class="card">
                 TODO: Two-way copypaste
@@ -75,7 +76,7 @@
     const threadRowTpl = document.getElementById('threadRowTpl');
     const messageRowTpl = document.getElementById('messageRowTpl');
 
-    import init, { bru_init, bru_health, get_messages } from '../pkg/bru_web.js';
+    import init, { bru_init, bru_health, get_messages, send_message } from '../pkg/bru_web.js';
 
     if (!phoneKey()) {
         window.location.href = "/"
@@ -197,6 +198,13 @@
             localStorage.clear();
             window.location.href = "/"
         }
+    }
+
+    async function sendMessag() {
+        const idempotency_guid = crypto.randomUUID();
+
+        await send_message(phoneKey(), to, body, idempotency_guid);
+
     }
 
 

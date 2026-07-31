@@ -134,15 +134,15 @@ body {
       }
     }
 
-    .card,
-    #clearBtn,
-    #okBtn {
+    .card {
       border: 2px solid #3d3a35;
       border-radius: 4px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      background: #fffdf8;
     }
 
-    #clearBtn,
-    #okBtn {
+    .btn {
       display: block;
       padding: 0.6rem 1.2rem;
       font-family: inherit;
@@ -152,17 +152,12 @@ body {
       text-transform: uppercase;
       color: #f7f5f0;
       cursor: pointer;
+      border: 2px solid #3d3a35;
+      border-radius: 4px;
     }
 
-    #clearBtn:active,
-    #okBtn:active {
+    .btn:active {
       transform: translateY(1px);
-    }
-
-    .card {
-      padding: 1rem 1.25rem;
-      margin: 1rem 0;
-      background: #fffdf8;
     }
 
     .id-row {
@@ -258,6 +253,36 @@ body {
       background: color-mix(in srgb, var(--text-color) 14%, transparent);
     }
 
+    .sendUI {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #smsBody {
+      flex: 1;
+      min-width: 0;
+      height: 2.25rem;
+      padding: 0.4rem 0;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+      background: transparent;
+      appearance: none;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--text-color);
+      resize: none;
+      white-space: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      outline: none;
+    }
+
+    #smsBody:focus {
+      border-bottom-color: var(--text-color);
+    }
+
     .message-meta {
       margin-top: 0.25rem;
       font-size: 0.75rem;
@@ -288,11 +313,11 @@ body {
       margin-top: 0;
     }
 
-    #okBtn {
+    .btn-accent {
       background: #3f6b4a;
     }
 
-    #okBtn:hover {
+    .btn-accent:hover {
       background: #335a3d;
     }
 
