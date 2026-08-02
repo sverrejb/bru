@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Your phone</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
     <link rel="stylesheet" href="../style.css">
 </head>
 
@@ -104,16 +105,34 @@
 </body>
 
 <script type="module">
+    // @ts-check
+    /**
+     * @typedef {object} Message
+     * @property {number} seq
+     * @property {number} threadId
+     * @property {string} address
+     * @property {string | null} displayName
+     * @property {string} body
+     * @property {number} date
+     * @property {'in' | 'out'} direction
+     * @property {string} status
+     * @property {string} [clientId]
+     */
+    /** @typedef {Record<string, Message[]>} Threads */
+
     import { key, phoneKey, phoneName, name, clientId } from '../util.js';
-    const clientName = document.getElementById('clientName');
-    const clientIdEl = document.getElementById('clientId');
-    const phoneNameEl = document.getElementById('phoneName');
-    const phoneId = document.getElementById('phoneId');
-    const threadListEl = document.getElementById('threadList');
-    const messageListEl = document.getElementById('messageList');
-    const threadRowTpl = document.getElementById('threadRowTpl');
-    const messageRowTpl = document.getElementById('messageRowTpl');
-    const smsBody = document.getElementById('smsBody');
+    const clientName = /** @type {HTMLElement} */ (document.getElementById('clientName'));
+    const clientIdEl = /** @type {HTMLElement} */ (document.getElementById('clientId'));
+    const phoneNameEl = /** @type {HTMLElement} */ (document.getElementById('phoneName'));
+    const phoneId = /** @type {HTMLElement} */ (document.getElementById('phoneId'));
+    const threadListEl = /** @type {HTMLElement} */ (document.getElementById('threadList'));
+    const messageListEl = /** @type {HTMLElement} */ (document.getElementById('messageList'));
+    /** @type {HTMLTemplateElement} */
+    const threadRowTpl = /** @type {any} */ (document.getElementById('threadRowTpl'));
+    /** @type {HTMLTemplateElement} */
+    const messageRowTpl = /** @type {any} */ (document.getElementById('messageRowTpl'));
+    /** @type {HTMLTextAreaElement} */
+    const smsBody = /** @type {any} */ (document.getElementById('smsBody'));
 
     import init, { bru_init, bru_health, get_messages, send_message } from '../pkg/bru_web.js';
 
@@ -130,11 +149,16 @@
     phoneNameEl.textContent = phoneName();
     clientName.textContent = name();
 
-    document.getElementById('clearBtn').onclick = clearData;
-    document.getElementById('sendBtn').onclick = sendMessage;
+    /** @type {HTMLElement} */ (document.getElementById('clearBtn')).onclick = clearData;
+    /** @type {HTMLElement} */ (document.getElementById('sendBtn')).onclick = sendMessage;
+    smsBody.onkeydown = (e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
+    };
 
 
+    /** @type {HTMLElement | undefined} */
     let selectedRow;
+    /** @type {{name?: string, number: string} | undefined} */
     let selectedContact;
 
     checkHealth();
@@ -142,6 +166,8 @@
     const threads = await getMessages();
 
     renderMessagesUI();
+
+    console.log(threads);
 
     //FUNCTIONS BELOW HERE
 
@@ -156,49 +182,71 @@
         }
 
         threadListEl.onclick = (e) => {
-            const row = e.target.closest('.thread-row');
-            if (row) selectThread(row);
+            const row = /** @type {Element} */ (e.target).closest('.thread-row');
+            if (row) selectThread(/** @type {HTMLElement} */ (row));
         };
 
         renderList(threadListEl, threadRowTpl, lastMessages, (node, last) => {
-            node.querySelector('.thread-row').dataset.threadId = last.threadId;
-            node.querySelector('.thread-name').textContent = last.displayName || last.address;
-            node.querySelector('.thread-preview').textContent = last.body;
+            /** @type {HTMLElement} */ (node.querySelector('.thread-row')).dataset.threadId = String(last.threadId);
+            /** @type {HTMLElement} */ (node.querySelector('.thread-name')).textContent = resolveDisplayName(threads[last.threadId]) || last.address;
+            /** @type {HTMLElement} */ (node.querySelector('.thread-preview')).textContent = last.body;
         });
 
-        selectThread(threadListEl.querySelector('.thread-row'));
+        selectThread(/** @type {HTMLElement} */ (threadListEl.querySelector('.thread-row')));
     }
 
+    /** @param {HTMLElement} row */
     function selectThread(row) {
         selectedRow?.classList.remove('selected');
         selectedRow = row;
         selectedRow.classList.add('selected');
-        const messages = threads[row.dataset.threadId];
+        const messages = threads[/** @type {string} */ (row.dataset.threadId)];
         const last = messages[messages.length - 1];
-        selectedContact = { name: last.displayName, number: last.address };
+        selectedContact = { name: resolveDisplayName(messages), number: last.address };
         smsBody.placeholder = `Send SMS to ${selectedContact.name || selectedContact.number}`;
         renderMessages(messages);
     }
 
+    /**
+     * @param {Message[]} messages
+     * @returns {string | undefined}
+     */
+    function resolveDisplayName(messages) {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            if (messages[i].direction === 'in' && messages[i].displayName) return messages[i].displayName;
+        }
+        return undefined;
+    }
+
+    /** @param {Message[]} messages */
     function renderMessages(messages) {
         messageListEl.innerHTML = '';
         renderList(messageListEl, messageRowTpl, messages, (node, message) => {
-            node.querySelector('.message-row').classList.add(message.direction);
-            node.querySelector('.message-body').textContent = message.body;
-            node.querySelector('.message-meta').textContent = new Date(message.date).toLocaleString();
+            /** @type {HTMLElement} */ (node.querySelector('.message-row')).classList.add(message.direction);
+            /** @type {HTMLElement} */ (node.querySelector('.message-body')).textContent = message.body;
+            /** @type {HTMLElement} */ (node.querySelector('.message-meta')).textContent = new Date(message.date).toLocaleString();
         });
         messageListEl.scrollTop = messageListEl.scrollHeight;
     }
 
+    /**
+     * @template T
+     * @param {HTMLElement} container
+     * @param {HTMLTemplateElement} template
+     * @param {T[]} items
+     * @param {(node: DocumentFragment, item: T) => void} populate
+     */
     function renderList(container, template, items, populate) {
         items.forEach(item => {
-            const node = template.content.cloneNode(true);
+            const node = /** @type {DocumentFragment} */ (template.content.cloneNode(true));
             populate(node, item);
             container.appendChild(node);
         });
     }
 
+    /** @returns {Promise<Threads>} */
     async function getMessages() {
+        /** @type {Message[]} */
         const cached = JSON.parse(localStorage.getItem('bru.messages') ?? '[]');
         let since = Number(localStorage.getItem('bru.messageCursor') ?? 0);
         const pk = phoneKey();
@@ -211,8 +259,9 @@
         } while (page.hasMore);
 
         localStorage.setItem('bru.messages', JSON.stringify(cached));
-        localStorage.setItem('bru.messageCursor', since);
+        localStorage.setItem('bru.messageCursor', String(since));
 
+        /** @type {Threads} */
         const threads = {};
         cached.forEach(m => (threads[m.threadId] ??= []).push(m));
         return threads;
@@ -220,7 +269,7 @@
 
 
     async function checkHealth() {
-        const healthError = document.getElementById('healthError');
+        const healthError = /** @type {HTMLElement} */ (document.getElementById('healthError'));
         try {
             const health = JSON.parse(await bru_health(phoneKey()));
             if (health.status !== 'ok') {
@@ -233,6 +282,10 @@
         }
     }
 
+    /**
+     * @param {HTMLElement} el
+     * @param {string | null} id
+     */
     function setId(el, id) {
         el.textContent = id;
         el.title = id;

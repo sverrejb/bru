@@ -19,8 +19,14 @@ const NOUNS = [
   'moose', 'moth', 'otter', 'owl', 'panther', 'pebble', 'phoenix', 'pine', 'plateau', 'quail',
   'raven', 'reef', 'ridge', 'river', 'sparrow', 'stream', 'thicket', 'tiger', 'willow', 'wren',
 ];
+/**
+ * @param {string[]} list
+ * @param {number} byte
+ * @returns {string}
+ */
 const pick = (list, byte) => list[byte % list.length];
 
+/** @returns {Uint8Array} the 32-byte secret key, persisted in localStorage */
 export const key = () => {
   const stored = localStorage.getItem('bru.key');
   if (stored) return Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
@@ -29,6 +35,7 @@ export const key = () => {
   return fresh;
 };
 
+/** @returns {string | null} the paired phone's endpoint id, if paired */
 export const phoneKey = () => {
   const stored = localStorage.getItem('bru.phoneKey');
   if (!stored) {
@@ -37,10 +44,13 @@ export const phoneKey = () => {
   return stored;
 }
 
+/** @returns {string | null} */
 export const phoneName = () => localStorage.getItem('bru.phoneName');
 
+/** @returns {string | null} this browser's endpoint id */
 export const clientId = () => localStorage.getItem('bru.clientId');
 
+/** @returns {string} human-readable session name derived from the secret key */
 export const name = () => {
   const keyBytes = key();
   return `${pick(ADJECTIVES, keyBytes[0])}-${pick(COLORS, keyBytes[1])}-${pick(NOUNS, keyBytes[2])}`;

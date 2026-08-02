@@ -204,7 +204,7 @@ body {
       margin: 0;
       padding: 0;
       min-width: 0;
-      max-height: 70vh;
+      max-height: calc(100vh - 21rem);
       overflow-y: auto;
       flex: 0 0 220px;
       border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
@@ -214,7 +214,7 @@ body {
     .message-column {
       flex: 1;
       min-width: 0;
-      max-height: 70vh;
+      max-height: calc(100vh - 21rem);
       display: flex;
       flex-direction: column;
     }
@@ -379,3 +379,14 @@ body {
   }
 }
 /* END LOADER */
+.dots::after {
+  content: '';
+  animation: dots 1.5s steps(1) infinite;
+}
+
+@keyframes dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+}

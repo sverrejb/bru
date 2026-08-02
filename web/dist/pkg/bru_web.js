@@ -1,3 +1,5 @@
+/* @ts-self-types="./bru_web.d.ts" */
+
 export class IntoUnderlyingByteSource {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;

@@ -3,7 +3,7 @@ default:
 
 # Build the wasm module into web/dist/pkg (committed, since Netlify cannot build it)
 build:
-    wasm-pack build --target web --no-pack --no-typescript --release --out-dir dist/pkg
+    wasm-pack build --target web --no-pack --release --out-dir dist/pkg
     rm -f dist/pkg/.gitignore
 
 serve: build

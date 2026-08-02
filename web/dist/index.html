@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>bru - The link to your phone</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -44,7 +45,7 @@
       <p>Install the companion app and pair the phone by scanning the QR-code below.</p>
       <a href="https://todo.todo">Install app</a>
       <div id="qr"></div>
-      <span id="phoneId">Waiting for pairing...</span>
+      <span id="phoneId">Waiting for pairing<span class="dots"></span></span>
       <p>Browser identifier:
         <span id="sessionName"></span>
       </p>
@@ -116,7 +117,8 @@
 </body>
 
 <script type="module">
-  // ugly hot reload hack 
+  // @ts-check
+  // ugly hot reload hack
   const stamp = async () =>
     (await fetch('./pkg/bru_web_bg.wasm', { method: 'HEAD', cache: 'no-store' })).headers.get('last-modified');
 
@@ -141,7 +143,8 @@
     const sessionName = document.getElementById('sessionName');
     const phoneId = document.getElementById('phoneId');
     const phoneNameEl = document.getElementById('phoneName');
-    const pairDialog = document.getElementById('pairDialog');
+    /** @type {HTMLDialogElement} */
+    const pairDialog = /** @type {any} */ (document.getElementById('pairDialog'));
 
     pairDialog.addEventListener('close', () => {
       if (pairDialog.returnValue === 'ok') {
