@@ -144,8 +144,8 @@
     const keyBytes = key();
     await bru_init(keyBytes);
 
-    setId(phoneId, phoneKey());
-    setId(clientIdEl, clientId());
+    phoneId.textContent = phoneId.title = phoneKey();
+    clientIdEl.textContent = clientIdEl.title = clientId();
     phoneNameEl.textContent = phoneName();
     clientName.textContent = name();
 
@@ -160,6 +160,8 @@
     let selectedRow;
     /** @type {{name?: string, number: string} | undefined} */
     let selectedContact;
+    /** @type {Map<string, string>} */
+    const drafts = new Map();
 
     checkHealth();
 
@@ -197,6 +199,11 @@
 
     /** @param {HTMLElement} row */
     function selectThread(row) {
+        if (selectedRow) {
+            const prevThreadId = /** @type {string} */ (selectedRow.dataset.threadId);
+            if (smsBody.value) drafts.set(prevThreadId, smsBody.value);
+            else drafts.delete(prevThreadId);
+        }
         selectedRow?.classList.remove('selected');
         selectedRow = row;
         selectedRow.classList.add('selected');
@@ -204,6 +211,7 @@
         const last = messages[messages.length - 1];
         selectedContact = { name: resolveDisplayName(messages), number: last.address };
         smsBody.placeholder = `Send SMS to ${selectedContact.name || selectedContact.number}`;
+        smsBody.value = drafts.get(row.dataset.threadId ?? '') ?? '';
         renderMessages(messages);
     }
 
@@ -282,15 +290,6 @@
         }
     }
 
-    /**
-     * @param {HTMLElement} el
-     * @param {string | null} id
-     */
-    function setId(el, id) {
-        el.textContent = id;
-        el.title = id;
-    };
-
     function clearData() {
         if (confirm("Clear all Bru-related data off this browser?")) {
             localStorage.clear();
@@ -299,13 +298,13 @@
     }
 
     async function sendMessage() {
-        console.log(smsBody);
         if (!smsBody.value){
             return
         }
         const idempotency_guid = crypto.randomUUID();
         await send_message(phoneKey(), selectedContact.number, smsBody.value, idempotency_guid);
         smsBody.value = "";
+        if (selectedRow) drafts.delete(/** @type {string} */ (selectedRow.dataset.threadId));
     }
 
 
