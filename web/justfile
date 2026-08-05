@@ -6,6 +6,10 @@ build:
     wasm-pack build --target web --no-pack --release --out-dir dist/pkg
     rm -f dist/pkg/.gitignore
 
+# Typecheck the page scripts
+check:
+    tsc --noEmit -p dist/jsconfig.json
+
 serve: build
     (sleep 1; open http://localhost:8123) & python3 -m http.server 8123 --directory dist
 

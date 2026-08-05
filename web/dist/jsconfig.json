@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
     "checkJs": true,
+    "strict": true,
     "target": "esnext",
+    "module": "esnext",
     "lib": ["esnext", "dom"],
     "moduleResolution": "bundler"
-  }
+  },
+  "exclude": ["pkg"]
 }

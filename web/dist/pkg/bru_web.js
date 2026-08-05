@@ -1,5 +1,139 @@
 /* @ts-self-types="./bru_web.d.ts" */
 
+export class Bru {
+    static __wrap(ptr) {
+        const obj = Object.create(Bru.prototype);
+        obj.__wbg_ptr = ptr;
+        BruFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        BruFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_bru_free(ptr, 0);
+    }
+    /**
+     * @returns {Promise<string>}
+     */
+    accept_pairing() {
+        const ret = wasm.bru_accept_pairing(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
+     * @param {string} phone_id
+     * @returns {Promise<string>}
+     */
+    health(phone_id) {
+        const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.bru_health(this.__wbg_ptr, ptr0, len0);
+        return takeObject(ret);
+    }
+    /**
+     * @returns {string}
+     */
+    id() {
+        let deferred1_0;
+        let deferred1_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            wasm.bru_id(retptr, this.__wbg_ptr);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            deferred1_0 = r0;
+            deferred1_1 = r1;
+            return getStringFromWasm0(r0, r1);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export5(deferred1_0, deferred1_1, 1);
+        }
+    }
+    /**
+     * @param {string} phone_id
+     * @param {number} since
+     * @param {number} limit
+     * @returns {Promise<string>}
+     */
+    messages(phone_id, since, limit) {
+        const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.bru_messages(this.__wbg_ptr, ptr0, len0, since, limit);
+        return takeObject(ret);
+    }
+    /**
+     * @returns {Promise<void>}
+     */
+    online() {
+        const ret = wasm.bru_online(this.__wbg_ptr);
+        return takeObject(ret);
+    }
+    /**
+     * @param {Uint8Array} secret_key
+     * @returns {Promise<Bru>}
+     */
+    static open(secret_key) {
+        const ptr0 = passArray8ToWasm0(secret_key, wasm.__wbindgen_export);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.bru_open(ptr0, len0);
+        return takeObject(ret);
+    }
+    /**
+     * @param {string} name
+     * @returns {string}
+     */
+    pairing_code(name) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+            const ptr0 = passStringToWasm0(name, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+            const len0 = WASM_VECTOR_LEN;
+            wasm.bru_pairing_code(retptr, this.__wbg_ptr, ptr0, len0);
+            var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+            var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+            var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+            var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+            var ptr2 = r0;
+            var len2 = r1;
+            if (r3) {
+                ptr2 = 0; len2 = 0;
+                throw takeObject(r2);
+            }
+            deferred3_0 = ptr2;
+            deferred3_1 = len2;
+            return getStringFromWasm0(ptr2, len2);
+        } finally {
+            wasm.__wbindgen_add_to_stack_pointer(16);
+            wasm.__wbindgen_export5(deferred3_0, deferred3_1, 1);
+        }
+    }
+    /**
+     * @param {string} phone_id
+     * @param {string} to
+     * @param {string} body
+     * @param {string} client_id
+     * @returns {Promise<string>}
+     */
+    send_message(phone_id, to, body, client_id) {
+        const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(to, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(body, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len2 = WASM_VECTOR_LEN;
+        const ptr3 = passStringToWasm0(client_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len3 = WASM_VECTOR_LEN;
+        const ret = wasm.bru_send_message(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        return takeObject(ret);
+    }
+}
+if (Symbol.dispose) Bru.prototype[Symbol.dispose] = Bru.prototype.free;
+
 export class IntoUnderlyingByteSource {
     __destroy_into_raw() {
         const ptr = this.__wbg_ptr;
@@ -110,108 +244,6 @@ export class IntoUnderlyingSource {
     }
 }
 if (Symbol.dispose) IntoUnderlyingSource.prototype[Symbol.dispose] = IntoUnderlyingSource.prototype.free;
-
-/**
- * @returns {Promise<string>}
- */
-export function accept_pairing() {
-    const ret = wasm.accept_pairing();
-    return takeObject(ret);
-}
-
-/**
- * @param {string} phone_id
- * @returns {Promise<string>}
- */
-export function bru_health(phone_id) {
-    const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.bru_health(ptr0, len0);
-    return takeObject(ret);
-}
-
-/**
- * @param {Uint8Array} secret_key
- * @returns {Promise<string>}
- */
-export function bru_init(secret_key) {
-    const ptr0 = passArray8ToWasm0(secret_key, wasm.__wbindgen_export);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.bru_init(ptr0, len0);
-    return takeObject(ret);
-}
-
-/**
- * @returns {Promise<void>}
- */
-export function bru_online() {
-    const ret = wasm.bru_online();
-    return takeObject(ret);
-}
-
-/**
- * @param {string} name
- * @returns {string}
- */
-export function generate_pairing_code(name) {
-    let deferred3_0;
-    let deferred3_1;
-    try {
-        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passStringToWasm0(name, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.generate_pairing_code(retptr, ptr0, len0);
-        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
-        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
-        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
-        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
-        var ptr2 = r0;
-        var len2 = r1;
-        if (r3) {
-            ptr2 = 0; len2 = 0;
-            throw takeObject(r2);
-        }
-        deferred3_0 = ptr2;
-        deferred3_1 = len2;
-        return getStringFromWasm0(ptr2, len2);
-    } finally {
-        wasm.__wbindgen_add_to_stack_pointer(16);
-        wasm.__wbindgen_export5(deferred3_0, deferred3_1, 1);
-    }
-}
-
-/**
- * @param {string} phone_id
- * @param {number} since
- * @param {number} limit
- * @returns {Promise<string>}
- */
-export function get_messages(phone_id, since, limit) {
-    const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.get_messages(ptr0, len0, since, limit);
-    return takeObject(ret);
-}
-
-/**
- * @param {string} phone_id
- * @param {string} to
- * @param {string} body
- * @param {string} client_id
- * @returns {Promise<string>}
- */
-export function send_message(phone_id, to, body, client_id) {
-    const ptr0 = passStringToWasm0(phone_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len0 = WASM_VECTOR_LEN;
-    const ptr1 = passStringToWasm0(to, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len1 = WASM_VECTOR_LEN;
-    const ptr2 = passStringToWasm0(body, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len2 = WASM_VECTOR_LEN;
-    const ptr3 = passStringToWasm0(client_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
-    const len3 = WASM_VECTOR_LEN;
-    const ret = wasm.send_message(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
-    return takeObject(ret);
-}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
@@ -281,6 +313,10 @@ function __wbg_get_imports() {
         __wbg_body_18c9f2ac15ead4b2: function(arg0) {
             const ret = getObject(arg0).body;
             return isLikeNone(ret) ? 0 : addHeapObject(ret);
+        },
+        __wbg_bru_new: function(arg0) {
+            const ret = Bru.__wrap(arg0);
+            return addHeapObject(ret);
         },
         __wbg_buffer_54b87055582c8a81: function(arg0) {
             const ret = getObject(arg0).buffer;
@@ -433,9 +469,6 @@ function __wbg_get_imports() {
             const ret = getObject(arg0).length;
             return ret;
         },
-        __wbg_log_103c7f0047b8c9e8: function(arg0, arg1) {
-            console.log(getStringFromWasm0(arg0, arg1));
-        },
         __wbg_message_fb0e6e7854e6ea7a: function(arg0, arg1) {
             const ret = getObject(arg1).message;
             const ptr1 = passStringToWasm0(ret, wasm.__wbindgen_export, wasm.__wbindgen_export2);
@@ -486,7 +519,7 @@ function __wbg_get_imports() {
                     const a = state0.a;
                     state0.a = 0;
                     try {
-                        return __wasm_bindgen_func_elem_4035(a, state0.b, arg0, arg1);
+                        return __wasm_bindgen_func_elem_4040(a, state0.b, arg0, arg1);
                     } finally {
                         state0.a = a;
                     }
@@ -706,33 +739,33 @@ function __wbg_get_imports() {
             return ret;
         },
         __wbindgen_cast_0000000000000001: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 151, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2388);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 148, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2392);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000002: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 463, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_3975);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [Externref], shim_idx: 460, ret: Result(Unit), inner_ret: Some(Result(Unit)) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_3979);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000003: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("CloseEvent")], shim_idx: 151, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2388_2);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("CloseEvent")], shim_idx: 148, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2392_2);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000004: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MessageEvent")], shim_idx: 151, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2388_3);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [NamedExternref("MessageEvent")], shim_idx: 148, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_2392_3);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000005: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 109, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
-            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_1425);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 106, ret: Unit, inner_ret: Some(Unit) }, mutable: true }) -> Externref`.
+            const ret = makeMutClosure(arg0, arg1, __wasm_bindgen_func_elem_1429);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000006: function(arg0, arg1) {
-            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 52, ret: Unit, inner_ret: Some(Unit) }, mutable: false }) -> Externref`.
-            const ret = makeClosure(arg0, arg1, __wasm_bindgen_func_elem_5116);
+            // Cast intrinsic for `Closure(Closure { owned: true, function: Function { arguments: [], shim_idx: 51, ret: Unit, inner_ret: Some(Unit) }, mutable: false }) -> Externref`.
+            const ret = makeClosure(arg0, arg1, __wasm_bindgen_func_elem_5121);
             return addHeapObject(ret);
         },
         __wbindgen_cast_0000000000000007: function(arg0, arg1) {
@@ -759,30 +792,30 @@ function __wbg_get_imports() {
     };
 }
 
-function __wasm_bindgen_func_elem_1425(arg0, arg1) {
-    wasm.__wasm_bindgen_func_elem_1425(arg0, arg1);
+function __wasm_bindgen_func_elem_1429(arg0, arg1) {
+    wasm.__wasm_bindgen_func_elem_1429(arg0, arg1);
 }
 
-function __wasm_bindgen_func_elem_5116(arg0, arg1) {
-    wasm.__wasm_bindgen_func_elem_5116(arg0, arg1);
+function __wasm_bindgen_func_elem_5121(arg0, arg1) {
+    wasm.__wasm_bindgen_func_elem_5121(arg0, arg1);
 }
 
-function __wasm_bindgen_func_elem_2388(arg0, arg1, arg2) {
-    wasm.__wasm_bindgen_func_elem_2388(arg0, arg1, addHeapObject(arg2));
+function __wasm_bindgen_func_elem_2392(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_2392(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wasm_bindgen_func_elem_2388_2(arg0, arg1, arg2) {
-    wasm.__wasm_bindgen_func_elem_2388_2(arg0, arg1, addHeapObject(arg2));
+function __wasm_bindgen_func_elem_2392_2(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_2392_2(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wasm_bindgen_func_elem_2388_3(arg0, arg1, arg2) {
-    wasm.__wasm_bindgen_func_elem_2388_3(arg0, arg1, addHeapObject(arg2));
+function __wasm_bindgen_func_elem_2392_3(arg0, arg1, arg2) {
+    wasm.__wasm_bindgen_func_elem_2392_3(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wasm_bindgen_func_elem_3975(arg0, arg1, arg2) {
+function __wasm_bindgen_func_elem_3979(arg0, arg1, arg2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        wasm.__wasm_bindgen_func_elem_3975(retptr, arg0, arg1, addHeapObject(arg2));
+        wasm.__wasm_bindgen_func_elem_3979(retptr, arg0, arg1, addHeapObject(arg2));
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         if (r1) {
@@ -793,8 +826,8 @@ function __wasm_bindgen_func_elem_3975(arg0, arg1, arg2) {
     }
 }
 
-function __wasm_bindgen_func_elem_4035(arg0, arg1, arg2, arg3) {
-    wasm.__wasm_bindgen_func_elem_4035(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+function __wasm_bindgen_func_elem_4040(arg0, arg1, arg2, arg3) {
+    wasm.__wasm_bindgen_func_elem_4040(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
 
@@ -811,6 +844,9 @@ const __wbindgen_enum_RequestCredentials = ["omit", "same-origin", "include"];
 
 
 const __wbindgen_enum_RequestMode = ["same-origin", "no-cors", "cors", "navigate"];
+const BruFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_bru_free(ptr, 1));
 const IntoUnderlyingByteSourceFinalization = (typeof FinalizationRegistry === 'undefined')
     ? { register: () => {}, unregister: () => {} }
     : new FinalizationRegistry(ptr => wasm.__wbg_intounderlyingbytesource_free(ptr, 1));

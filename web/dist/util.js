@@ -1,3 +1,21 @@
+// @ts-check
+
+/**
+ * @typedef {object} Message
+ * @property {number} seq
+ * @property {number} threadId
+ * @property {string} address
+ * @property {string | null} displayName
+ * @property {string} body
+ * @property {number} date
+ * @property {'in' | 'out'} direction
+ * @property {string} status
+ * @property {string} [clientId]
+ */
+
+/** @typedef {{ id: string, name: string }} Phone */
+/** @typedef {Map<number, Message[]>} Threads */
+
 const ADJECTIVES = [
   'brave', 'calm', 'clever', 'cozy', 'crisp', 'curious', 'daring', 'dizzy', 'eager', 'earnest',
   'fuzzy', 'gentle', 'giddy', 'glad', 'gleeful', 'grumpy', 'happy', 'humble', 'jolly', 'jovial',
@@ -19,15 +37,40 @@ const NOUNS = [
   'moose', 'moth', 'otter', 'owl', 'panther', 'pebble', 'phoenix', 'pine', 'plateau', 'quail',
   'raven', 'reef', 'ridge', 'river', 'sparrow', 'stream', 'thicket', 'tiger', 'willow', 'wren',
 ];
+
 /**
  * @param {string[]} list
  * @param {number} byte
- * @returns {string}
  */
 const pick = (list, byte) => list[byte % list.length];
 
-/** @returns {Uint8Array} the 32-byte secret key, persisted in localStorage */
-export const key = () => {
+/**
+ * @param {Uint8Array} key
+ * @returns {string} human-readable name derived from the secret key
+ */
+export const sessionName = (key) =>
+  `${pick(ADJECTIVES, key[0])}-${pick(COLORS, key[1])}-${pick(NOUNS, key[2])}`;
+
+/**
+ * @param {Message[]} messages
+ * @returns {Threads}
+ */
+export const groupByThread = (messages) => Map.groupBy(messages, (message) => message.threadId);
+
+/** @param {Message[]} messages */
+export const lastOf = (messages) => messages[messages.length - 1];
+
+/** @param {Threads} threads @returns {Message[][]} newest conversation first */
+export const byRecency = (threads) =>
+  [...threads.values()].sort((a, b) => lastOf(b).date - lastOf(a).date);
+
+/** @param {Message[]} messages @returns {string} the contact's name, falling back to their number */
+export const displayNameOf = (messages) =>
+  messages.findLast((m) => m.direction === 'in' && m.displayName)?.displayName
+  ?? lastOf(messages).address;
+
+/** @returns {Uint8Array} the 32-byte secret key, generating and persisting one on first use */
+export const loadOrCreateKey = () => {
   const stored = localStorage.getItem('bru.key');
   if (stored) return Uint8Array.from(atob(stored), (c) => c.charCodeAt(0));
   const fresh = crypto.getRandomValues(new Uint8Array(32));
@@ -35,23 +78,31 @@ export const key = () => {
   return fresh;
 };
 
-/** @returns {string | null} the paired phone's endpoint id, if paired */
-export const phoneKey = () => {
-  const stored = localStorage.getItem('bru.phoneKey');
-  if (!stored) {
-    return null;
-  }
-  return stored;
-}
+/** @returns {Phone | null} the paired phone, if any */
+export const loadPhone = () => {
+  const id = localStorage.getItem('bru.phoneKey');
+  return id ? { id, name: localStorage.getItem('bru.phoneName') ?? id } : null;
+};
 
-/** @returns {string | null} */
-export const phoneName = () => localStorage.getItem('bru.phoneName');
+/** @param {Phone} phone */
+export const savePhone = ({ id, name }) => {
+  localStorage.setItem('bru.phoneKey', id);
+  localStorage.setItem('bru.phoneName', name);
+};
 
-/** @returns {string | null} this browser's endpoint id */
-export const clientId = () => localStorage.getItem('bru.clientId');
+/** @returns {{ messages: Message[], cursor: number }} */
+export const loadMessageCache = () => ({
+  messages: JSON.parse(localStorage.getItem('bru.messages') ?? '[]'),
+  cursor: Number(localStorage.getItem('bru.messageCursor') ?? 0),
+});
 
-/** @returns {string} human-readable session name derived from the secret key */
-export const name = () => {
-  const keyBytes = key();
-  return `${pick(ADJECTIVES, keyBytes[0])}-${pick(COLORS, keyBytes[1])}-${pick(NOUNS, keyBytes[2])}`;
-}
+/**
+ * @param {Message[]} messages
+ * @param {number} cursor
+ */
+export const saveMessageCache = (messages, cursor) => {
+  localStorage.setItem('bru.messages', JSON.stringify(messages));
+  localStorage.setItem('bru.messageCursor', String(cursor));
+};
+
+export const clearAll = () => localStorage.clear();

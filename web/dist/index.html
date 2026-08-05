@@ -7,6 +7,7 @@
   <title>bru - The link to your phone</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="./main.js"></script>
 </head>
 
 <body>
@@ -44,6 +45,7 @@
       <h2>Get started</h2>
       <p>Install the companion app and pair the phone by scanning the QR-code below.</p>
       <a href="https://todo.todo">Install app</a>
+      <p id="pairError" class="error" hidden></p>
       <div id="qr"></div>
       <span id="phoneId">Waiting for pairing<span class="dots"></span></span>
       <p>Browser identifier:
@@ -115,80 +117,4 @@
     </ul>
   </footer>
 </body>
-
-<script type="module">
-  // @ts-check
-  // ugly hot reload hack
-  const stamp = async () =>
-    (await fetch('./pkg/bru_web_bg.wasm', { method: 'HEAD', cache: 'no-store' })).headers.get('last-modified');
-
-  const built = await stamp();
-  setInterval(async () => { if (await stamp() !== built) location.reload(); }, 1000);
-
-
-  import init, { bru_init, bru_online, generate_pairing_code, accept_pairing } from './pkg/bru_web.js';
-  import { key, phoneKey, phoneName, name } from './util.js';
-
-  const getStartedSection = /** @type {HTMLElement} */ (document.getElementById('getStarted'));
-  const yourPhoneSection = /** @type {HTMLElement} */ (document.getElementById('yourPhone'));
-
-  if (phoneKey()) {
-    getStartedSection.hidden = true;
-    yourPhoneSection.hidden = false;
-    /** @type {HTMLElement} */ (document.getElementById('pairedPhoneName')).textContent = phoneName();
-  } else {
-    yourPhoneSection.hidden = true;
-
-    const qr = /** @type {HTMLElement} */ (document.getElementById('qr'));
-    const sessionName = /** @type {HTMLElement} */ (document.getElementById('sessionName'));
-    const phoneId = /** @type {HTMLElement} */ (document.getElementById('phoneId'));
-    const phoneNameEl = /** @type {HTMLElement} */ (document.getElementById('phoneName'));
-    /** @type {HTMLDialogElement} */
-    const pairDialog = /** @type {any} */ (document.getElementById('pairDialog'));
-
-    pairDialog.addEventListener('close', () => {
-      if (pairDialog.returnValue === 'ok') {
-        window.location.href = '/phone';
-      } else if (pairDialog.returnValue === 'cancel') {
-        localStorage.clear();
-        window.location.href = '/';
-      }
-    });
-
-    try {
-      await init();
-      const keyBytes = key();
-      const sessionNameValue = name();
-      const endpointId = await bru_init(keyBytes);
-      localStorage.setItem('bru.clientId', endpointId);
-      //if we are not able to reach a relay within 15 seconds, stop execution.
-      // TODO: Show error message to user.
-      await Promise.race([
-        bru_online(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('no relay after 15s')), 15_000)),
-      ]);
-
-      const svgString = generate_pairing_code(sessionNameValue);
-      qr.insertAdjacentHTML('beforeend', svgString);
-
-      sessionName.textContent = sessionNameValue;
-
-      const { id: phone, message } = JSON.parse(await accept_pairing());
-
-      phoneId.textContent = phone;
-      phoneNameEl.textContent = message.name;
-      localStorage.setItem('bru.phoneKey', phone);
-      localStorage.setItem('bru.phoneName', message.name);
-
-      pairDialog.showModal();
-    } catch (e) {
-      console.error(`failed: ${e}`);
-    }
-  }
-
-
-
-</script>
-
-
 </html>
