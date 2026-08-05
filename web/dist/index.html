@@ -129,20 +129,20 @@
   import init, { bru_init, bru_online, generate_pairing_code, accept_pairing } from './pkg/bru_web.js';
   import { key, phoneKey, phoneName, name } from './util.js';
 
-  const getStartedSection = document.getElementById('getStarted');
-  const yourPhoneSection = document.getElementById('yourPhone');
+  const getStartedSection = /** @type {HTMLElement} */ (document.getElementById('getStarted'));
+  const yourPhoneSection = /** @type {HTMLElement} */ (document.getElementById('yourPhone'));
 
   if (phoneKey()) {
     getStartedSection.hidden = true;
     yourPhoneSection.hidden = false;
-    document.getElementById('pairedPhoneName').textContent = phoneName();
+    /** @type {HTMLElement} */ (document.getElementById('pairedPhoneName')).textContent = phoneName();
   } else {
     yourPhoneSection.hidden = true;
 
-    const qr = document.getElementById('qr');
-    const sessionName = document.getElementById('sessionName');
-    const phoneId = document.getElementById('phoneId');
-    const phoneNameEl = document.getElementById('phoneName');
+    const qr = /** @type {HTMLElement} */ (document.getElementById('qr'));
+    const sessionName = /** @type {HTMLElement} */ (document.getElementById('sessionName'));
+    const phoneId = /** @type {HTMLElement} */ (document.getElementById('phoneId'));
+    const phoneNameEl = /** @type {HTMLElement} */ (document.getElementById('phoneName'));
     /** @type {HTMLDialogElement} */
     const pairDialog = /** @type {any} */ (document.getElementById('pairDialog'));
 
@@ -161,6 +161,8 @@
       const sessionNameValue = name();
       const endpointId = await bru_init(keyBytes);
       localStorage.setItem('bru.clientId', endpointId);
+      //if we are not able to reach a relay within 15 seconds, stop execution.
+      // TODO: Show error message to user.
       await Promise.race([
         bru_online(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('no relay after 15s')), 15_000)),
