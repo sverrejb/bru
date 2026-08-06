@@ -140,7 +140,16 @@ async function syncMessages() {
     hasMore = page.hasMore;
   }
 
-  saveMessageCache(messages, since);
+  try {
+    saveMessageCache(messages, since);
+  } catch (e) {
+    console.warn('could not cache messages locally', e);
+    const warning = $('cacheWarning');
+    warning.textContent =
+      'Message history too large to store, will be re-fetched from your phone on every visit. Sorry about that!';
+    warning.hidden = false;
+  }
+
   return messages;
 }
 
