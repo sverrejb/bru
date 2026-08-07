@@ -11,16 +11,16 @@ import {
 const PAGE_SIZE = 500;
 
 /** @type {<T extends HTMLElement = HTMLElement>(id: string) => T} */
-const $ = (id) => /** @type {any} */ (document.getElementById(id));
+const $ = (id) => /** @type {any} */(document.getElementById(id));
 
 /**
  * @param {ParentNode} node
  * @param {string} selector
  */
-const $$ = (node, selector) => /** @type {HTMLElement} */ (node.querySelector(selector));
+const $$ = (node, selector) => /** @type {HTMLElement} */(node.querySelector(selector));
 
 /** @param {Element | null} el */
-const asRow = (el) => /** @type {HTMLElement | null} */ (el);
+const asRow = (el) => /** @type {HTMLElement | null} */(el);
 
 /**
  * @param {HTMLElement} el
@@ -57,7 +57,7 @@ smsBody.onkeydown = (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
 };
 threadListEl.onclick = (e) => {
-  const row = asRow(/** @type {Element} */ (e.target).closest('.thread-row'));
+  const row = asRow(/** @type {Element} */(e.target).closest('.thread-row'));
   if (row) selectThread(row);
 };
 
@@ -139,7 +139,7 @@ function renderMessages(messages) {
   messageListEl.innerHTML = '';
   renderList(messageListEl, messageRowTpl, messages, (node, message) => {
     $$(node, '.message-row').classList.add(message.direction);
-    $$(node, '.message-body').textContent = message.body;
+    $$(node, '.message-body').append(find_links(message.body));
     $$(node, '.message-meta').textContent = new Date(message.date).toLocaleString();
   });
   messageListEl.scrollTop = messageListEl.scrollHeight;
@@ -155,6 +155,24 @@ async function sendMessage() {
   drafts.delete(String(row.dataset.threadId));
   //TODO: either fetch new messages on OK or do optimistic UI-thing and insert it temporary (do not persist).
   // TODO: also add visual indicator if message was not sent, and do not clear smsBody in that case
+}
+
+/** @param {Message["body"]} body */
+function find_links(body) {
+  const fragment = document.createDocumentFragment();
+  body.split(/(https?:\/\/[^\s<]+)/).forEach((part, i) => {
+    if (i % 2 === 0) {
+      fragment.append(part);
+      return;
+    }
+    const url = part.replace(/[.,;:!?)\]]+$/, '');
+    const a = document.createElement('a');
+    a.href = a.textContent = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    fragment.append(a, part.slice(url.length));
+  });
+  return fragment;
 }
 
 /** @returns {Promise<Message[]>} */
