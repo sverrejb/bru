@@ -20,8 +20,8 @@ export class Bru {
     /**
      * @returns {Promise<string>}
      */
-    accept_pairing() {
-        const ret = wasm.bru_accept_pairing(this.__wbg_ptr);
+    accept_incoming() {
+        const ret = wasm.bru_accept_incoming(this.__wbg_ptr);
         return takeObject(ret);
     }
     /**

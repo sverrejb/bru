@@ -12,7 +12,7 @@ export class Bru {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
-    accept_pairing(): Promise<string>;
+    accept_incoming(): Promise<string>;
     health(phone_id: string): Promise<string>;
     id(): string;
     messages(phone_id: string, since: number, limit: number): Promise<string>;
@@ -55,7 +55,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_bru_free: (a: number, b: number) => void;
-    readonly bru_accept_pairing: (a: number) => number;
+    readonly bru_accept_incoming: (a: number) => number;
     readonly bru_health: (a: number, b: number, c: number) => number;
     readonly bru_id: (a: number, b: number) => void;
     readonly bru_messages: (a: number, b: number, c: number, d: number, e: number) => number;

@@ -53,7 +53,7 @@ async function pair() {
     $('qr').insertAdjacentHTML('beforeend', bru.pairing_code(name));
     $('sessionName').textContent = name;
 
-    const { id, message } = JSON.parse(await bru.accept_pairing());
+    const { id, message } = JSON.parse(await bru.accept_incoming());
     /** @type {Phone} */
     const paired = { id, name: message.name };
     savePhone(paired);

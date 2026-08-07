@@ -7,3 +7,4 @@
 * Copy/paste including image support
 * Make phone ring?
 * MMS?
+* File transfer

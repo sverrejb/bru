@@ -48,7 +48,7 @@ impl Bru {
             .build())
     }
 
-    pub async fn accept_pairing(&self) -> Result<String, JsError> {
+    pub async fn accept_incoming(&self) -> Result<String, JsError> {
         let conn = self
             .endpoint
             .accept()

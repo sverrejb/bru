@@ -63,8 +63,15 @@ threadListEl.onclick = (e) => {
 
 reportHealth();
 
-const threads = groupByThread(await syncMessages());
-renderThreads(threads);
+const cache = loadMessageCache();
+/** @type {Map<string, string>} unsent text per thread, so a re-render cannot lose it */
+const drafts = new Map();
+
+/** @type {Threads} */
+let threads = groupByThread(await syncMessages());
+renderThreads();
+
+acceptLoop();
 
 /** @returns {never} */
 function goPair() {
@@ -72,14 +79,35 @@ function goPair() {
   throw new Error('not paired');
 }
 
-/** @param {Threads} threads */
-function renderThreads(threads) {
+async function acceptLoop() {
+  const error = $('healthError');
+  while (true) {
+    console.debug("accept-loop start");
+    try {
+      const { id } = JSON.parse(await bru.accept_incoming());
+      if (id !== phone.id) continue;
+      threads = groupByThread(await syncMessages());
+      renderThreads();
+    } catch {
+      error.textContent = 'Lost the connection to your phone. Reload window to try again.';
+      error.hidden = false;
+      return;
+    }
+  }
+}
+
+function renderThreads() {
   if (threads.size === 0) {
     messageListEl.textContent =
       'No messages yet. Try refreshing in a little while. If that does not work, delete data and try again.';
     return;
   }
 
+  const previous = selectedRow();
+  if (previous) drafts.set(String(previous.dataset.threadId), smsBody.value);
+  const previousId = previous?.dataset.threadId;
+
+  threadListEl.innerHTML = '';
   renderList(threadListEl, threadRowTpl, byRecency(threads), (node, messages) => {
     const last = lastOf(messages);
     $$(node, '.thread-row').dataset.threadId = String(last.threadId);
@@ -87,20 +115,22 @@ function renderThreads(threads) {
     $$(node, '.thread-preview').textContent = last.body;
   });
 
-  const first = asRow(threadListEl.querySelector('.thread-row'));
-  if (first) selectThread(first);
+  const restored = previousId
+    && asRow(threadListEl.querySelector(`.thread-row[data-thread-id="${previousId}"]`));
+  const row = restored || asRow(threadListEl.querySelector('.thread-row'));
+  if (row) selectThread(row);
 }
 
 /** @param {HTMLElement} row */
 function selectThread(row) {
   const previous = selectedRow();
-  if (previous) previous.dataset.draft = smsBody.value;
+  if (previous) drafts.set(String(previous.dataset.threadId), smsBody.value);
   previous?.classList.remove('selected');
   row.classList.add('selected');
 
   const messages = messagesOf(row);
   smsBody.placeholder = `Send SMS to ${displayNameOf(messages)}`;
-  smsBody.value = row.dataset.draft ?? '';
+  smsBody.value = drafts.get(String(row.dataset.threadId)) ?? '';
   renderMessages(messages);
 }
 
@@ -122,26 +152,25 @@ async function sendMessage() {
   const to = lastOf(messagesOf(row)).address;
   await bru.send_message(phone.id, to, smsBody.value, crypto.randomUUID());
   smsBody.value = '';
-  delete row.dataset.draft;
+  drafts.delete(String(row.dataset.threadId));
   //TODO: either fetch new messages on OK or do optimistic UI-thing and insert it temporary (do not persist).
   // TODO: also add visual indicator if message was not sent, and do not clear smsBody in that case
 }
 
 /** @returns {Promise<Message[]>} */
 async function syncMessages() {
-  const { messages, cursor } = loadMessageCache();
-  let since = cursor;
+  const { messages } = cache;
   let hasMore = true;
 
   while (hasMore) {
-    const page = JSON.parse(await bru.messages(phone.id, since, PAGE_SIZE));
+    const page = JSON.parse(await bru.messages(phone.id, cache.cursor, PAGE_SIZE));
     messages.push(...page.messages);
-    since = page.cursor;
+    cache.cursor = page.cursor;
     hasMore = page.hasMore;
   }
 
   try {
-    saveMessageCache(messages, since);
+    saveMessageCache(messages, cache.cursor);
   } catch (e) {
     console.warn('could not cache messages locally', e);
     const warning = $('cacheWarning');

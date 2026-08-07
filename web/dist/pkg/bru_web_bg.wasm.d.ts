@@ -2,7 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const __wbg_bru_free: (a: number, b: number) => void;
-export const bru_accept_pairing: (a: number) => number;
+export const bru_accept_incoming: (a: number) => number;
 export const bru_health: (a: number, b: number, c: number) => number;
 export const bru_id: (a: number, b: number) => void;
 export const bru_messages: (a: number, b: number, c: number, d: number, e: number) => number;
