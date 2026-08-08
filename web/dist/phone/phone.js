@@ -43,6 +43,8 @@ const messageRowTpl = $('messageRowTpl');
 const newMsgModal = $('newMsgModal');
 /** @type {HTMLInputElement} */
 const newMsgInput = $('newMsgInput');
+/** @type {HTMLInputElement} */
+const notifyToggle = $('notifyToggle');
 
 const phone = loadPhone() ?? goPair();
 
@@ -58,6 +60,9 @@ $('phoneName').textContent = phone.name;
 $('clearBtn').onclick = clearData;
 $('sendBtn').onclick = sendMessage;
 $('newBtn').onclick = newMessage;
+
+notifyToggle.checked = Notification.permission === 'granted' && localStorage.getItem('bru.notify') === 'on';
+notifyToggle.onchange = askNotificationPermission;
 
 
 smsBody.onkeydown = (e) => {
@@ -93,8 +98,10 @@ async function acceptLoop() {
     try {
       const { id } = JSON.parse(await bru.accept_incoming());
       if (id !== phone.id) continue;
+      const seen = cache.messages.length;
       threads = groupByThread(await syncMessages());
       renderThreads();
+      notify(cache.messages.slice(seen));
     } catch {
       error.textContent = 'Lost the connection to your phone. Reload window to try again.';
       error.hidden = false;
@@ -255,6 +262,7 @@ function renderList(container, template, items, populate) {
 }
 
 function newMessage() {
+
   newMsgInput.value = '';
   newMsgModal.returnValue = '';
   newMsgModal.showModal();
@@ -276,3 +284,20 @@ newMsgModal.onclose = () => {
   if (!newMsgModal.returnValue || !address) return;
   addDraftRow(address);
 };
+
+async function askNotificationPermission() {
+  if (notifyToggle.checked && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+  notifyToggle.checked = notifyToggle.checked && Notification.permission === 'granted';
+  $('notifyDenied').hidden = Notification.permission !== 'denied';
+  localStorage.setItem('bru.notify', notifyToggle.checked ? 'on' : 'off');
+}
+
+/** @param {Message[]} messages */
+function notify(messages) {
+  if (!notifyToggle.checked) return;
+  messages
+    .filter((message) => message.direction === 'in')
+    .forEach((message) => new Notification(displayNameOf([message]), { body: message.body }));
+}

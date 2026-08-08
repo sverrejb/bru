@@ -311,6 +311,13 @@ body {
       opacity: 0.6;
     }
 
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
     #clearBtn {
       margin-top: 1.5rem;
       background: #a8402a;
