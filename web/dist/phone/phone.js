@@ -39,6 +39,10 @@ const smsBody = $('smsBody');
 const threadRowTpl = $('threadRowTpl');
 /** @type {HTMLTemplateElement} */
 const messageRowTpl = $('messageRowTpl');
+/** @type {HTMLDialogElement} */
+const newMsgModal = $('newMsgModal');
+/** @type {HTMLInputElement} */
+const newMsgInput = $('newMsgInput');
 
 const phone = loadPhone() ?? goPair();
 
@@ -53,6 +57,9 @@ $('phoneName').textContent = phone.name;
 
 $('clearBtn').onclick = clearData;
 $('sendBtn').onclick = sendMessage;
+$('newBtn').onclick = newMessage;
+
+
 smsBody.onkeydown = (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
 };
@@ -104,33 +111,37 @@ function renderThreads() {
   }
 
   const previous = selectedRow();
-  if (previous) drafts.set(String(previous.dataset.threadId), smsBody.value);
-  const previousId = previous?.dataset.threadId;
+  if (previous) drafts.set(String(previous.dataset.address), smsBody.value);
+  const previousAddress = previous?.dataset.address;
 
   threadListEl.innerHTML = '';
   renderList(threadListEl, threadRowTpl, byRecency(threads), (node, messages) => {
     const last = lastOf(messages);
-    $$(node, '.thread-row').dataset.threadId = String(last.threadId);
+    const row = $$(node, '.thread-row');
+    row.dataset.threadId = String(last.threadId);
+    row.dataset.address = last.address;
     $$(node, '.thread-name').textContent = displayNameOf(messages);
     $$(node, '.thread-preview').textContent = last.body;
   });
 
-  const restored = previousId
-    && asRow(threadListEl.querySelector(`.thread-row[data-thread-id="${previousId}"]`));
-  const row = restored || asRow(threadListEl.querySelector('.thread-row'));
+  const rows = /** @type {HTMLElement[]} */ (Array.from(threadListEl.querySelectorAll('.thread-row')));
+  const row = rows.find((r) => r.dataset.address === previousAddress) ?? rows[0];
   if (row) selectThread(row);
 }
 
 /** @param {HTMLElement} row */
 function selectThread(row) {
   const previous = selectedRow();
-  if (previous) drafts.set(String(previous.dataset.threadId), smsBody.value);
+  if (previous) {
+    drafts.set(String(previous.dataset.address), smsBody.value);
+  }
   previous?.classList.remove('selected');
   row.classList.add('selected');
 
+  const address = String(row.dataset.address);
   const messages = messagesOf(row);
-  smsBody.placeholder = `Send SMS to ${displayNameOf(messages)}`;
-  smsBody.value = drafts.get(String(row.dataset.threadId)) ?? '';
+  smsBody.placeholder = `Send SMS to ${messages.length ? displayNameOf(messages) : address}`;
+  smsBody.value = drafts.get(address) ?? '';
   renderMessages(messages);
 }
 
@@ -149,10 +160,10 @@ async function sendMessage() {
   const row = selectedRow();
   if (!row || !smsBody.value) return;
 
-  const to = lastOf(messagesOf(row)).address;
+  const to = String(row.dataset.address);
   await bru.send_message(phone.id, to, smsBody.value, crypto.randomUUID());
   smsBody.value = '';
-  drafts.delete(String(row.dataset.threadId));
+  drafts.delete(to);
   //TODO: either fetch new messages on OK or do optimistic UI-thing and insert it temporary (do not persist).
   // TODO: also add visual indicator if message was not sent, and do not clear smsBody in that case
 }
@@ -242,3 +253,26 @@ function renderList(container, template, items, populate) {
     container.appendChild(node);
   });
 }
+
+function newMessage() {
+  newMsgInput.value = '';
+  newMsgModal.returnValue = '';
+  newMsgModal.showModal();
+}
+
+/** @param {string} address */
+function addDraftRow(address) {
+  const node = /** @type {DocumentFragment} */ (threadRowTpl.content.cloneNode(true));
+  const row = $$(node, '.thread-row');
+  row.dataset.address = address;
+  $$(node, '.thread-name').textContent = address;
+  threadListEl.prepend(node);
+  selectThread(row);
+  smsBody.focus();
+}
+
+newMsgModal.onclose = () => {
+  const address = newMsgInput.value.trim();
+  if (!newMsgModal.returnValue || !address) return;
+  addDraftRow(address);
+};

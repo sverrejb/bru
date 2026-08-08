@@ -1,10 +1,10 @@
-* Dark mode
+* Start new thread-button
 * Notifications
-* CLickable URLs
+* Dark mode
 * PIN code with encryption
 * Better error handling
 * Sent messages should show immediately in the UI
 * Copy/paste including image support
-* Make phone ring?
-* MMS?
 * File transfer
+* MMS?
+* Make phone ring?

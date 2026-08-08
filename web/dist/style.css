@@ -135,7 +135,7 @@ body {
         flex-direction: column;
       }
 
-      .thread-list {
+      .thread-column {
         flex-basis: auto;
         max-height: 30vh;
         border-right: none;
@@ -200,15 +200,24 @@ body {
       gap: 1.25rem;
     }
 
+    .thread-column {
+      flex: 0 0 220px;
+      min-width: 0;
+      max-height: calc(100vh - 21rem);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
+      padding-right: 1.25rem;
+    }
+
     .thread-list {
       margin: 0;
       padding: 0;
       min-width: 0;
-      max-height: calc(100vh - 21rem);
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      flex: 0 0 220px;
-      border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
-      padding-right: 1.25rem;
     }
 
     .message-column {
@@ -266,6 +275,7 @@ body {
     }
 
     .sendUI {
+      margin-bottom: 0;
       display: flex;
       align-items: center;
       gap: 0.75rem;
