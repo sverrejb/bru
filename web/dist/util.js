@@ -79,7 +79,7 @@ export const formatDate = (timestamp) => {
 
   if (date.toDateString() === today.toDateString()) return `Today, ${time}`;
   if (date.toDateString() === yesterday.toDateString()) return `Yesterday, ${time}`;
-
+  
   const day = String(date.getDate()).padStart(2, '0');
   const month = date.toLocaleDateString('en-GB', { month: 'short' });
   return `${day}-${month}-${date.getFullYear()}, ${time}`;
