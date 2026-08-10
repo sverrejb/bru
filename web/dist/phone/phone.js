@@ -82,6 +82,8 @@ const cache = loadMessageCache();
 const drafts = new Map();
 /** @type {Map<string, Message>} outgoing messages not yet reflected in a synced fetch, keyed by clientId */
 const pending = new Map();
+/** @type {Map<string, Notification>} unread notifications, keyed by sender address, so opening the thread can dismiss them */
+const liveNotifications = new Map();
 
 /** @type {Threads} */
 let threads = groupByThread(await syncMessages());
@@ -107,7 +109,7 @@ async function acceptLoop() {
       renderThreads();
       cache.messages.slice(seen)
         .filter((message) => message.direction === 'in')
-        .forEach((message) => notify(`New message from ${displayNameOf([message])}`));
+        .forEach((message) => notify(`New message from ${displayNameOf([message])}`, message.address));
     } catch {
       error.textContent = 'Lost the connection to your phone. Reload window to try again.';
       error.hidden = false;
@@ -152,6 +154,9 @@ function selectThread(row) {
   row.classList.add('selected');
 
   const address = String(row.dataset.address);
+  liveNotifications.get(address)?.close();
+  liveNotifications.delete(address);
+
   const messages = messagesOf(row);
   smsBody.placeholder = `Send SMS to ${messages.length ? displayNameOf(messages) : address}`;
   smsBody.value = drafts.get(address) ?? '';
@@ -329,8 +334,13 @@ async function askNotificationPermission() {
   notify('Notifications looks like this');
 }
 
-/** @param {string} text */
-function notify(text) {
+/**
+ * @param {string} text
+ * @param {string} [key] identifies the notification for later dismissal (e.g. the sender's address)
+ */
+function notify(text, key) {
   if (!notifyToggle.checked) return;
-  new Notification(text, { icon: '../favicon.svg' });
+  if (key) liveNotifications.get(key)?.close();
+  const notification = new Notification(text, { icon: '../favicon.svg', requireInteraction: true });
+  if (key) liveNotifications.set(key, notification);
 }
