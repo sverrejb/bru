@@ -73,6 +73,7 @@ body {
       display: flex;
       align-items: flex-start;
       gap: 1.5rem;
+      flex: 1;
     }
 
     .layout .sidebar {
@@ -272,6 +273,19 @@ body {
     .message-row.out {
       margin-left: auto;
       background: color-mix(in srgb, var(--text-color) 14%, transparent);
+    }
+
+    .message-row.sending {
+      opacity: 0.6;
+    }
+
+    .message-row.failed {
+      background: color-mix(in srgb, #a8402a 25%, transparent);
+    }
+
+    .message-row.failed .message-meta {
+      color: #a8402a;
+      opacity: 1;
     }
 
     .sendUI {

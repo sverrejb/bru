@@ -69,6 +69,22 @@ export const displayNameOf = (messages) =>
   messages.findLast((m) => m.direction === 'in' && m.displayName)?.displayName
   ?? lastOf(messages).address;
 
+/** @param {number} timestamp @returns {string} */
+export const formatDate = (timestamp) => {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  if (date.toDateString() === today.toDateString()) return `Today, ${time}`;
+  if (date.toDateString() === yesterday.toDateString()) return `Yesterday, ${time}`;
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = date.toLocaleDateString('en-GB', { month: 'short' });
+  return `${day}-${month}-${date.getFullYear()}, ${time}`;
+};
+
 /** @returns {Uint8Array} the 32-byte secret key, generating and persisting one on first use */
 export const loadOrCreateKey = () => {
   const stored = localStorage.getItem('bru.key');

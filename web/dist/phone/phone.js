@@ -4,11 +4,13 @@
 
 import init, { Bru } from '../pkg/bru_web.js';
 import {
-  byRecency, clearAll, displayNameOf, groupByThread, lastOf, loadMessageCache, loadOrCreateKey,
+  byRecency, clearAll, displayNameOf, formatDate, groupByThread, lastOf, loadMessageCache, loadOrCreateKey,
   loadPhone, saveMessageCache, sessionName,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
+/** @type {Record<string, string>} display text for client-side-only statuses, keyed by Message.status */
+const PENDING_STATUS_LABEL = { sending: 'Sending…', failed: 'Failed to send' };
 
 /** @type {<T extends HTMLElement = HTMLElement>(id: string) => T} */
 const $ = (id) => /** @type {any} */(document.getElementById(id));
@@ -78,6 +80,8 @@ reportHealth();
 const cache = loadMessageCache();
 /** @type {Map<string, string>} unsent text per thread, so a re-render cannot lose it */
 const drafts = new Map();
+/** @type {Map<string, Message>} outgoing messages not yet reflected in a synced fetch, keyed by clientId */
+const pending = new Map();
 
 /** @type {Threads} */
 let threads = groupByThread(await syncMessages());
@@ -101,7 +105,9 @@ async function acceptLoop() {
       const seen = cache.messages.length;
       threads = groupByThread(await syncMessages());
       renderThreads();
-      notify(cache.messages.slice(seen));
+      cache.messages.slice(seen)
+        .filter((message) => message.direction === 'in')
+        .forEach((message) => notify(`New message from ${displayNameOf([message])}`));
     } catch {
       error.textContent = 'Lost the connection to your phone. Reload window to try again.';
       error.hidden = false;
@@ -156,9 +162,10 @@ function selectThread(row) {
 function renderMessages(messages) {
   messageListEl.innerHTML = '';
   renderList(messageListEl, messageRowTpl, messages, (node, message) => {
-    $$(node, '.message-row').classList.add(message.direction);
+    $$(node, '.message-row').classList.add(message.direction, message.status);
     $$(node, '.message-body').append(find_links(message.body));
-    $$(node, '.message-meta').textContent = new Date(message.date).toLocaleString();
+    $$(node, '.message-meta').textContent =
+      PENDING_STATUS_LABEL[message.status] ?? formatDate(message.date);
   });
   messageListEl.scrollTop = messageListEl.scrollHeight;
 }
@@ -168,11 +175,34 @@ async function sendMessage() {
   if (!row || !smsBody.value) return;
 
   const to = String(row.dataset.address);
-  await bru.send_message(phone.id, to, smsBody.value, crypto.randomUUID());
+  const body = smsBody.value;
+  const clientId = crypto.randomUUID();
+  /** @type {Message} */
+  const optimistic = {
+    seq: -1, threadId: Number(row.dataset.threadId), address: to, displayName: null,
+    body, date: Date.now(), direction: 'out', status: 'sending', clientId,
+  };
+  pending.set(clientId, optimistic);
   smsBody.value = '';
   drafts.delete(to);
-  //TODO: either fetch new messages on OK or do optimistic UI-thing and insert it temporary (do not persist).
-  // TODO: also add visual indicator if message was not sent, and do not clear smsBody in that case
+  renderMessages(messagesOf(row));
+
+  try {
+    const { status } = JSON.parse(await bru.send_message(phone.id, to, body, clientId));
+    optimistic.status = status;
+  } catch {
+    optimistic.status = 'failed';
+  }
+  renderMessages(messagesOf(row));
+}
+
+/** removes pending sends once the real synced message with the same clientId shows up */
+function reconcilePending() {
+  if (pending.size === 0) return;
+  const confirmedIds = new Set(cache.messages.map((m) => m.clientId));
+  for (const clientId of pending.keys()) {
+    if (confirmedIds.has(clientId)) pending.delete(clientId);
+  }
 }
 
 /** @param {Message["body"]} body */
@@ -215,6 +245,7 @@ async function syncMessages() {
     warning.hidden = false;
   }
 
+  reconcilePending();
   return messages;
 }
 
@@ -243,7 +274,10 @@ function selectedRow() {
 
 /** @param {HTMLElement} row */
 function messagesOf(row) {
-  return threads.get(Number(row.dataset.threadId)) ?? [];
+  const confirmed = threads.get(Number(row.dataset.threadId)) ?? [];
+  const address = row.dataset.address;
+  const optimistic = [...pending.values()].filter((m) => m.address === address);
+  return [...confirmed, ...optimistic].sort((a, b) => a.date - b.date);
 }
 
 /**
@@ -292,12 +326,11 @@ async function askNotificationPermission() {
   notifyToggle.checked = notifyToggle.checked && Notification.permission === 'granted';
   $('notifyDenied').hidden = Notification.permission !== 'denied';
   localStorage.setItem('bru.notify', notifyToggle.checked ? 'on' : 'off');
+  notify('Notifications looks like this');
 }
 
-/** @param {Message[]} messages */
-function notify(messages) {
+/** @param {string} text */
+function notify(text) {
   if (!notifyToggle.checked) return;
-  messages
-    .filter((message) => message.direction === 'in')
-    .forEach((message) => new Notification(displayNameOf([message]), { body: message.body }));
+  new Notification(text, { icon: '../favicon.svg' });
 }
