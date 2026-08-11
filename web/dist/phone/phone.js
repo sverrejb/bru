@@ -10,7 +10,7 @@ import {
 
 const PAGE_SIZE = 500;
 /** @type {Record<string, string>} display text for client-side-only statuses, keyed by Message.status */
-const PENDING_STATUS_LABEL = { sending: 'Sending…', failed: 'Failed to send' };
+const PENDING_STATUS_LABEL = { sending: 'Sending…', pending: 'Sending…', failed: 'Failed to send' };
 
 /** @type {<T extends HTMLElement = HTMLElement>(id: string) => T} */
 const $ = (id) => /** @type {any} */(document.getElementById(id));
@@ -101,6 +101,7 @@ async function acceptLoop() {
     console.debug("accept-loop start");
     try {
       const { id } = JSON.parse(await bru.accept_incoming());
+      console.debug('[bru] accept_incoming from', id, id === phone.id ? '(our phone)' : '(ignored)');
       if (id !== phone.id) continue;
       const seen = cache.messages.length;
       threads = groupByThread(await syncMessages());
@@ -108,7 +109,8 @@ async function acceptLoop() {
       cache.messages.slice(seen)
         .filter((message) => message.direction === 'in')
         .forEach((message) => notify(`New message from ${displayNameOf([message])}`));
-    } catch {
+    } catch (e) {
+      console.error('[bru] accept-loop died', e);
       error.textContent = 'Lost the connection to your phone. Reload window to try again.';
       error.hidden = false;
       return;
@@ -167,7 +169,7 @@ function renderMessages(messages) {
     $$(node, '.message-meta').textContent =
       PENDING_STATUS_LABEL[message.status] ?? formatDate(message.date);
   });
-  messageListEl.scrollTop = messageListEl.scrollHeight;
+  requestAnimationFrame(() => { messageListEl.scrollTop = messageListEl.scrollHeight; });
 }
 
 async function sendMessage() {
@@ -187,10 +189,14 @@ async function sendMessage() {
   drafts.delete(to);
   renderMessages(messagesOf(row));
 
+  console.debug('[bru] sending', { to, clientId });
   try {
-    const { status } = JSON.parse(await bru.send_message(phone.id, to, body, clientId));
-    optimistic.status = status;
-  } catch {
+    const response = JSON.parse(await bru.send_message(phone.id, to, body, clientId));
+    if (response.error) throw new Error(response.error);
+    console.debug('[bru] send response', response);
+    optimistic.status = response.status;
+  } catch (e) {
+    console.error('[bru] send failed', { to, clientId }, e);
     optimistic.status = 'failed';
   }
   renderMessages(messagesOf(row));
@@ -201,8 +207,12 @@ function reconcilePending() {
   if (pending.size === 0) return;
   const confirmedIds = new Set(cache.messages.map((m) => m.clientId));
   for (const clientId of pending.keys()) {
-    if (confirmedIds.has(clientId)) pending.delete(clientId);
+    if (confirmedIds.has(clientId)) {
+      console.debug('[bru] reconciled pending send', clientId);
+      pending.delete(clientId);
+    }
   }
+  if (pending.size > 0) console.debug('[bru] still awaiting sync for', [...pending.keys()]);
 }
 
 /** @param {Message["body"]} body */
@@ -229,7 +239,9 @@ async function syncMessages() {
   let hasMore = true;
 
   while (hasMore) {
+    console.debug('[bru] fetching messages since', cache.cursor);
     const page = JSON.parse(await bru.messages(phone.id, cache.cursor, PAGE_SIZE));
+    console.debug('[bru] got', page.messages.length, 'messages, new cursor', page.cursor, 'hasMore', page.hasMore);
     messages.push(...page.messages);
     cache.cursor = page.cursor;
     hasMore = page.hasMore;

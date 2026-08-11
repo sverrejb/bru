@@ -59,6 +59,12 @@ body {
       aspect-ratio: 1 / 1;
     }
 
+    #pairUrl {
+      overflow-wrap: anywhere;
+      user-select: all;
+      color: color-mix(in srgb, var(--text-color) 65%, transparent);
+    }
+
     #qr svg {
       width: 100%;
       height: auto;

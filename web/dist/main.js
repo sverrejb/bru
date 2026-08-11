@@ -51,6 +51,7 @@ async function pair() {
     ]);
 
     $('qr').insertAdjacentHTML('beforeend', bru.pairing_code(name));
+    $('pairUrl').textContent = bru.pair_url(name);
     $('sessionName').textContent = name;
 
     const { id, message } = JSON.parse(await bru.accept_incoming());
