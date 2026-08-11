@@ -41,10 +41,13 @@ kotlin {
 }
 
 dependencies {
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     implementation("computer.iroh:iroh:1.0.0") {
         exclude(group = "net.java.dev.jna", module = "jna")
     }
     implementation("net.java.dev.jna:jna:5.15.0@aar")
+
+    testImplementation("junit:junit:4.13.2")
 }
