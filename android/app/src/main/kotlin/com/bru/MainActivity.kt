@@ -74,9 +74,11 @@ class MainActivity : Activity() {
             addView(content)
         })
 
+        val app = applicationContext
         scope.launch {
             try {
-                IrohNet.myId(this@MainActivity)
+                IrohNet.myId(app)
+                IrohNet.startServing(app) { dispatch(app, it) }
             } catch (e: Throwable) {
                 Log.e(TAG, "iroh endpoint failed", e)
                 endpointError = "${e.javaClass.simpleName}: ${e.message}"
