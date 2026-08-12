@@ -43,16 +43,16 @@
 
     <section id="getStarted">
       <h2>Get started</h2>
-      <p>Install the companion app and pair the phone by scanning the QR-code below.</p>
-      <a href="https://todo.todo">Install app</a>
+      <p><a href="https://todo.todo">Install the companion app</a> and pair the phone by scanning the QR-code below.</p>
       <p id="pairError" class="error" hidden></p>
       <div id="qr"></div>
-      <p>Can't scan it? Paste this link into the app instead:</p>
-      <p id="pairUrl"></p>
+      <span id="sessionName"></span>
       <span id="phoneId">Waiting for pairing<span class="dots"></span></span>
-      <p>Browser identifier:
-        <span id="sessionName"></span>
-      </p>
+      <details>
+        <summary>Can't scan the code?</summary>
+        <p>Paste this link into the app instead:</p>
+        <p id="pairUrl"></p>
+      </details>
     </section>
 
     <section id="yourPhone" hidden>

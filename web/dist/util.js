@@ -120,19 +120,52 @@ export const savePhone = ({ id, name }) => {
   localStorage.setItem('bru.phoneName', name);
 };
 
-/** @returns {{ messages: Message[], cursor: number }} */
-export const loadMessageCache = () => ({
-  messages: JSON.parse(localStorage.getItem('bru.messages') ?? '[]'),
-  cursor: Number(localStorage.getItem('bru.messageCursor') ?? 0),
+const DB_NAME = 'bru';
+const DB_VERSION = 1;
+
+/** @param {IDBRequest} request @returns {Promise<any>} */
+const requestToPromise = (request) => new Promise((resolve, reject) => {
+  request.onsuccess = () => resolve(request.result);
+  request.onerror = () => reject(request.error);
 });
 
-/**
- * @param {Message[]} messages
- * @param {number} cursor
- */
-export const saveMessageCache = (messages, cursor) => {
-  localStorage.setItem('bru.messages', JSON.stringify(messages));
-  localStorage.setItem('bru.messageCursor', String(cursor));
+/** @returns {Promise<IDBDatabase>} */
+const openDb = () => new Promise((resolve, reject) => {
+  const request = indexedDB.open(DB_NAME, DB_VERSION);
+  request.onupgradeneeded = () => {
+    request.result.createObjectStore('messages', { keyPath: 'seq' });
+    request.result.createObjectStore('meta', { keyPath: 'key' });
+  };
+  request.onsuccess = () => resolve(request.result);
+  request.onerror = () => reject(request.error);
+});
+
+/** @returns {Promise<{ messages: Message[], cursor: number }>} */
+export const loadMessageCache = async () => {
+  const db = await openDb();
+  const tx = db.transaction(['messages', 'meta'], 'readonly');
+  const messages = await requestToPromise(tx.objectStore('messages').getAll());
+  const cursorRecord = await requestToPromise(tx.objectStore('meta').get('cursor'));
+  return { messages, cursor: cursorRecord?.value ?? 0 };
 };
 
-export const clearAll = () => localStorage.clear();
+/**
+ * @param {Message[]} newMessages
+ * @param {number} cursor
+ */
+export const saveMessageCache = async (newMessages, cursor) => {
+  const db = await openDb();
+  const tx = db.transaction(['messages', 'meta'], 'readwrite');
+  const store = tx.objectStore('messages');
+  for (const message of newMessages) store.put(message);
+  tx.objectStore('meta').put({ key: 'cursor', value: cursor });
+  await /** @type {Promise<void>} */(new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  }));
+};
+
+export const clearAll = async () => {
+  localStorage.clear();
+  await requestToPromise(indexedDB.deleteDatabase(DB_NAME));
+};

@@ -87,7 +87,7 @@ threadListEl.onclick = (e) => {
 
 reportHealth();
 
-const cache = loadMessageCache();
+const cache = await loadMessageCache();
 /** @type {Map<string, string>} unsent text per thread, so a re-render cannot lose it */
 const drafts = new Map();
 /** @type {Map<string, Message>} outgoing messages not yet reflected in a synced fetch, keyed by clientId */
@@ -298,6 +298,7 @@ function find_links(body) {
 /** @returns {Promise<Message[]>} */
 async function syncMessages() {
   const { messages } = cache;
+  const newMessages = [];
   let hasMore = true;
 
   while (hasMore) {
@@ -305,6 +306,7 @@ async function syncMessages() {
     const page = JSON.parse(await bru.messages(phone.id, cache.cursor, PAGE_SIZE));
     console.debug('[bru] got', page.messages.length, 'messages, new cursor', page.cursor, 'hasMore', page.hasMore);
     messages.push(...page.messages);
+    newMessages.push(...page.messages);
     cache.cursor = page.cursor;
     hasMore = page.hasMore;
   }
@@ -312,7 +314,7 @@ async function syncMessages() {
   mergeTempThreads(messages);
 
   try {
-    saveMessageCache(messages, cache.cursor);
+    await saveMessageCache(newMessages, cache.cursor);
   } catch (e) {
     console.warn('could not cache messages locally', e);
     const warning = $('cacheWarning');
@@ -337,9 +339,9 @@ async function reportHealth() {
   error.hidden = false;
 }
 
-function clearData() {
+async function clearData() {
   if (confirm('Clear all Bru-related data off this browser?')) {
-    clearAll();
+    await clearAll();
     location.href = '/';
   }
 }

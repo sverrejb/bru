@@ -71,6 +71,7 @@ impl Bru {
             .render::<svg::Color>()
             .min_dimensions(512, 512)
             .light_color(svg::Color("#0000"))
+            .quiet_zone(false)
             .build())
     }
 

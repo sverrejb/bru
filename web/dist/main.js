@@ -17,8 +17,6 @@ const $ = (id) => /** @type {any} */ (document.getElementById(id));
 const rejectAfter = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 
-if (location.hostname === 'localhost') reloadOnRebuild();
-
 const phone = loadPhone();
 if (phone) {
   $('getStarted').hidden = true;
@@ -31,10 +29,10 @@ if (phone) {
 async function pair() {
   /** @type {HTMLDialogElement} */
   const dialog = $('pairDialog');
-  dialog.addEventListener('close', () => {
+  dialog.addEventListener('close', async () => {
     if (dialog.returnValue === 'ok') location.href = '/phone';
     if (dialog.returnValue === 'cancel') {
-      clearAll();
+      await clearAll();
       location.reload();
     }
   });
@@ -52,7 +50,7 @@ async function pair() {
 
     $('qr').insertAdjacentHTML('beforeend', bru.pairing_code(name));
     $('pairUrl').textContent = bru.pair_url(name);
-    $('sessionName').textContent = name;
+    $('sessionName').textContent = name.replaceAll('-', ' ');
 
     const { id, message } = JSON.parse(await bru.accept_incoming());
     /** @type {Phone} */
@@ -67,15 +65,4 @@ async function pair() {
     error.textContent = e instanceof Error ? e.message : String(e);
     error.hidden = false;
   }
-}
-
-async function reloadOnRebuild() {
-  const stamp = async () =>
-    (await fetch('./pkg/bru_web_bg.wasm', { method: 'HEAD', cache: 'no-store' }))
-      .headers.get('last-modified');
-
-  const built = await stamp();
-  setInterval(async () => {
-    if (await stamp() !== built) location.reload();
-  }, 1000);
 }

@@ -1,5 +1,6 @@
 :root {
   --text-color: #3d3a35;
+  --qr-width: 400px;
 }
 
 *, *::before, *::after {
@@ -55,7 +56,8 @@ body {
     }
 
     #qr {
-      max-width: 500px;
+      padding-top: 1rem;
+      max-width: var(--qr-width);
       aspect-ratio: 1 / 1;
     }
 
@@ -68,7 +70,17 @@ body {
     #qr svg {
       width: 100%;
       height: auto;
-      max-width: 500px;
+      max-width: var(--qr-width);
+    }
+
+    #sessionName {
+      display: block;
+      width: 100%;
+      max-width: var(--qr-width);
+      margin: 0.5rem 0;
+      font-weight: bolder;
+      text-align: justify;
+      text-align-last: justify;
     }
 
     body.wide {
@@ -458,4 +470,8 @@ body {
   25% { content: '.'; }
   50% { content: '..'; }
   75% { content: '...'; }
+}
+
+summary {
+  cursor: pointer;
 }
