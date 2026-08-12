@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bru",
+      "sha256_cert_fingerprints": [
+        "1A:E5:6E:B3:97:6E:AB:E8:57:0E:45:76:AC:BE:D8:73:AF:43:F3:D9:60:F9:64:70:49:FA:76:7B:59:58:99:75"
+      ]
+    }
+  }
+]
