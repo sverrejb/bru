@@ -5,7 +5,7 @@
 import init, { Bru } from '../pkg/bru_web.js';
 import {
   byRecency, clearAll, displayNameOf, formatDate, groupByThread, lastOf, loadMessageCache, loadOrCreateKey,
-  loadPhone, saveMessageCache, sessionName,
+  loadPhone, mergeTempThreads, saveMessageCache, sessionName,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
@@ -246,6 +246,8 @@ async function syncMessages() {
     cache.cursor = page.cursor;
     hasMore = page.hasMore;
   }
+
+  mergeTempThreads(messages);
 
   try {
     saveMessageCache(messages, cache.cursor);

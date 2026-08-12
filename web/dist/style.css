@@ -276,6 +276,10 @@ body {
       overflow-wrap: anywhere;
     }
 
+    .message-body {
+      white-space: pre-wrap;
+    }
+
     .message-row.out {
       margin-left: auto;
       background: color-mix(in srgb, var(--text-color) 14%, transparent);

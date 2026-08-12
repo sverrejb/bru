@@ -52,6 +52,20 @@ export const sessionName = (key) =>
   `${pick(ADJECTIVES, key[0])}-${pick(COLORS, key[1])}-${pick(NOUNS, key[2])}`;
 
 /**
+ * Merge outgoing messages until phone app's DB catches up.
+ * @param {Message[]} messages
+ */
+export const mergeTempThreads = (messages) => {
+  const realThreadIdByAddress = new Map();
+  for (const m of messages) {
+    if (m.threadId >= 0) realThreadIdByAddress.set(m.address, m.threadId);
+  }
+  for (const m of messages) {
+    if (m.threadId < 0) m.threadId = realThreadIdByAddress.get(m.address) ?? m.threadId;
+  }
+};
+
+/**
  * @param {Message[]} messages
  * @returns {Threads}
  */
