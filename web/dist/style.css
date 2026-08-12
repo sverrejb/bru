@@ -329,6 +329,25 @@ body {
       border-bottom-color: var(--text-color);
     }
 
+    #clipboardText {
+      width: 100%;
+      min-height: 4rem;
+      resize: vertical;
+      padding: 0.4rem;
+      border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+      border-radius: 4px;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    .clipboard-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
     .message-meta {
       margin-top: 0.25rem;
       font-size: 0.75rem;
@@ -372,6 +391,14 @@ body {
 
     .btn-accent:hover {
       background: #335a3d;
+    }
+
+    .btn-info {
+      background: #3a5a78;
+    }
+
+    .btn-info:hover {
+      background: #2c4760;
     }
 
 /* LOADER */

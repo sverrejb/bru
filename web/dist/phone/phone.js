@@ -47,6 +47,14 @@ const newMsgModal = $('newMsgModal');
 const newMsgInput = $('newMsgInput');
 /** @type {HTMLInputElement} */
 const notifyToggle = $('notifyToggle');
+/** @type {HTMLTextAreaElement} */
+const clipboardText = $('clipboardText');
+/** @type {HTMLButtonElement} */
+const copyClipboardBtn = $('copyClipboardBtn');
+/** @type {HTMLButtonElement} */
+const sendClipboardBtn = $('sendClipboardBtn');
+/** @type {HTMLElement} */
+const clipboardStatus = $('clipboardStatus');
 
 const phone = loadPhone() ?? goPair();
 
@@ -62,6 +70,8 @@ $('phoneName').textContent = phone.name;
 $('clearBtn').onclick = clearData;
 $('sendBtn').onclick = sendMessage;
 $('newBtn').onclick = newMessage;
+copyClipboardBtn.onclick = copyClipboard;
+sendClipboardBtn.onclick = sendClipboard;
 
 notifyToggle.checked = Notification.permission === 'granted' && localStorage.getItem('bru.notify') === 'on';
 notifyToggle.onchange = askNotificationPermission;
@@ -100,9 +110,19 @@ async function acceptLoop() {
   while (true) {
     console.debug("accept-loop start");
     try {
-      const { id } = JSON.parse(await bru.accept_incoming());
-      console.debug('[bru] accept_incoming from', id, id === phone.id ? '(our phone)' : '(ignored)');
+      const { id, message } = JSON.parse(await bru.accept_incoming());
+      console.debug('[bru] accept_incoming from', id, id === phone.id ? '(our phone)' : '(ignored)', message);
       if (id !== phone.id) continue;
+
+      if (message.op === 'clipboard') {
+        clipboardText.value = message.text;
+        continue;
+      }
+      if (message.op !== 'wake') {
+        console.warn('[bru] ignoring unknown push op', message.op);
+        continue;
+      }
+
       const seen = cache.messages.length;
       threads = groupByThread(await syncMessages());
       renderThreads();
@@ -191,8 +211,7 @@ async function sendMessage() {
 
   console.debug('[bru] sending', { to, clientId });
   try {
-    const response = JSON.parse(await bru.send_message(phone.id, to, body, clientId));
-    if (response.error) throw new Error(response.error);
+    const response = await callBru(bru.send_message(phone.id, to, body, clientId));
     console.debug('[bru] send response', response);
     optimistic.status = response.status;
   } catch (e) {
@@ -200,6 +219,49 @@ async function sendMessage() {
     optimistic.status = 'failed';
   }
   renderMessages(messagesOf(row));
+}
+
+async function copyClipboard() {
+  if (!clipboardText.value) return;
+  try {
+    await navigator.clipboard.writeText(clipboardText.value);
+    flashButton(copyClipboardBtn, 'Copied!');
+  } catch (e) {
+    console.error('[bru] clipboard copy failed', e);
+  }
+}
+
+async function sendClipboard() {
+  if (!clipboardText.value) return;
+  try {
+    await callBru(bru.send_clipboard(phone.id, clipboardText.value));
+    flashButton(sendClipboardBtn, 'Sent!');
+    clipboardText.value = '';
+    clipboardStatus.hidden = true;
+  } catch (e) {
+    console.error('[bru] clipboard send failed', e);
+    clipboardStatus.textContent = 'Could not reach phone.';
+    clipboardStatus.hidden = false;
+  }
+}
+
+/**
+ * @param {Promise<string>} promise
+ */
+async function callBru(promise) {
+  const response = JSON.parse(await promise);
+  if (response.error) throw new Error(response.error);
+  return response;
+}
+
+/**
+ * @param {HTMLButtonElement} btn
+ * @param {string} text
+ */
+function flashButton(btn, text) {
+  const original = btn.textContent;
+  btn.textContent = text;
+  setTimeout(() => { btn.textContent = original; }, 1200);
 }
 
 /** removes pending sends once the real synced message with the same clientId shows up */

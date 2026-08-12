@@ -120,6 +120,11 @@ impl Bru {
         );
         self.request(phone_id, req.as_bytes()).await
     }
+
+    pub async fn send_clipboard(&self, phone_id: &str, text: &str) -> Result<String, JsError> {
+        let req = format!(r#"{{"op":"clipboard","text":{}}}"#, json_string(text));
+        self.request(phone_id, req.as_bytes()).await
+    }
 }
 
 impl Bru {

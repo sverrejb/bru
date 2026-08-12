@@ -71,7 +71,19 @@
                 <button id="clearBtn" class="btn">Clear all data</button>
             </div>
             <div class="card">
-                TODO: Two-way copypaste
+                <p><b>Clipboard</b><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor"
+                        stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+                        style="vertical-align: -0.15em; margin-left: 0.35rem;">
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                    </svg>
+                </p>
+                <textarea id="clipboardText" placeholder="Clipboard text"></textarea>
+                <div class="clipboard-actions">
+                    <button id="copyClipboardBtn" class="btn btn-info">Copy</button>
+                    <button id="sendClipboardBtn" class="btn btn-accent">Send to phone</button>
+                </div>
+                <p id="clipboardStatus" class="error" hidden></p>
             </div>
             <div class="card">
                 TODO: filedrop

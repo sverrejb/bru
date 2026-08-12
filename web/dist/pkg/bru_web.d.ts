@@ -20,6 +20,7 @@ export class Bru {
     static open(secret_key: Uint8Array): Promise<Bru>;
     pair_url(name: string): string;
     pairing_code(name: string): string;
+    send_clipboard(phone_id: string, text: string): Promise<string>;
     send_message(phone_id: string, to: string, body: string, client_id: string): Promise<string>;
 }
 
@@ -64,6 +65,7 @@ export interface InitOutput {
     readonly bru_open: (a: number, b: number) => number;
     readonly bru_pair_url: (a: number, b: number, c: number, d: number) => void;
     readonly bru_pairing_code: (a: number, b: number, c: number, d: number) => void;
+    readonly bru_send_clipboard: (a: number, b: number, c: number, d: number, e: number) => number;
     readonly bru_send_message: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
     readonly ring_core_0_17_14__bn_mul_mont: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly __wbg_intounderlyingbytesource_free: (a: number, b: number) => void;
@@ -79,13 +81,13 @@ export interface InitOutput {
     readonly intounderlyingsink_write: (a: number, b: number) => number;
     readonly intounderlyingsource_cancel: (a: number) => void;
     readonly intounderlyingsource_pull: (a: number, b: number) => number;
-    readonly __wasm_bindgen_func_elem_3988: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_4049: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_2399: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_2399_2: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_2399_3: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_1437: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_5130: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_3997: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_4058: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_2408: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_2408_2: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_2408_3: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_1446: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_5139: (a: number, b: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;
