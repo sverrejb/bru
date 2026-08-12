@@ -50,6 +50,14 @@ body {
       font-size: 0.75rem;
     }
 
+    .dumb-joke a,
+    .dumb-joke a:visited {
+      color: #6b665e;
+      text-decoration: none;
+      cursor: pointer;
+      font-style: italic;
+    }
+
     .error {
       color: #a8402a;
       font-weight: bolder;
