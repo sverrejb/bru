@@ -8,7 +8,12 @@ import org.json.JSONObject
 
 const val AGENT_VERSION = "1.0.0"
 
-suspend fun dispatch(context: Context, repo: SmsRepository, reqJson: String): String {
+suspend fun dispatch(
+    context: Context,
+    repo: SmsRepository,
+    sender: SmsSender,
+    reqJson: String,
+): String {
     val req = try {
         JSONObject(reqJson)
     } catch (e: Exception) {
@@ -40,7 +45,38 @@ suspend fun dispatch(context: Context, repo: SmsRepository, reqJson: String): St
                 .toString()
         }
 
+        "send" -> {
+            val to = req.optString("to")
+            val body = req.optString("body")
+            val clientId = req.optString("clientId")
+            if (to.isBlank() || body.isBlank() || clientId.isBlank()) {
+                errorJson("to, body and clientId are required")
+            } else {
+                JSONObject().put("status", send(repo, sender, to, body, clientId)).toString()
+            }
+        }
+
         else -> errorJson("unsupported op")
+    }
+}
+
+private suspend fun send(
+    repo: SmsRepository,
+    sender: SmsSender,
+    to: String,
+    body: String,
+    clientId: String,
+): String {
+    val target = PhoneNumbers.normalizeE164(to) ?: to
+    val outcome = repo.getOrCreatePending(clientId, target, body)
+    if (!outcome.isNew) return outcome.status
+    return try {
+        sender.send(outcome.seq, target, body)
+        "pending"
+    } catch (e: Exception) {
+        Log.w("bru", "send dispatch failed: ${e.javaClass.simpleName}")
+        repo.markFailed(outcome.seq)
+        "failed"
     }
 }
 

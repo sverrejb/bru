@@ -4,14 +4,21 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
+import androidx.room.withTransaction
+import com.bru.db.AppDatabase
 import com.bru.db.MessageLog
-import com.bru.db.MessageLogDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 internal const val PER_THREAD_LIMIT = 100
+internal const val RECONCILE_WINDOW_MS = 24 * 60 * 60 * 1000L
+
+data class SendOutcome(val seq: Long, val status: String, val isNew: Boolean)
+
+internal fun tempThreadId(address: String): Long =
+    Int.MIN_VALUE.toLong() + address.hashCode()
 
 internal fun takeThreadSlot(seen: MutableMap<Long, Int>, threadId: Long): Boolean {
     val n = seen.getOrDefault(threadId, 0)
@@ -21,14 +28,67 @@ internal fun takeThreadSlot(seen: MutableMap<Long, Int>, threadId: Long): Boolea
 }
 
 class SmsRepository(
-    private val dao: MessageLogDao,
+    private val db: AppDatabase,
     private val resolver: ContentResolver,
 ) {
+    private val dao = db.messages()
     private val mutex = Mutex()
 
     suspend fun ingestNew(): Int = withContext(Dispatchers.IO) {
         mutex.withLock {
-            dao.insertAll(query(dao.maxProviderId() ?: 0L)).count { it != -1L }
+            val provider = query(dao.maxProviderId() ?: 0L)
+            if (provider.isEmpty()) return@withLock 0
+            db.withTransaction {
+                val pending = dao
+                    .pendingSince(System.currentTimeMillis() - RECONCILE_WINDOW_MS)
+                    .toMutableList()
+                val rows = provider.map { row ->
+                    val match = if (row.direction == "out") {
+                        pending.lastOrNull { it.address == row.address && it.body == row.body }
+                    } else {
+                        null
+                    }
+                    if (match == null) {
+                        row
+                    } else {
+                        pending.remove(match)
+                        dao.deleteBySeq(match.seq)
+                        row.copy(clientId = match.clientId)
+                    }
+                }
+                dao.insertAll(rows).count { it != -1L }
+            }
+        }
+    }
+
+    suspend fun getOrCreatePending(clientId: String, to: String, body: String): SendOutcome =
+        withContext(Dispatchers.IO) {
+            mutex.withLock {
+                dao.byClientId(clientId)?.let {
+                    return@withLock SendOutcome(it.seq, it.status, false)
+                }
+                val seq = dao.insertOne(
+                    MessageLog(
+                        clientId = clientId,
+                        threadId = tempThreadId(to),
+                        address = to,
+                        body = body,
+                        date = System.currentTimeMillis(),
+                        direction = "out",
+                        status = "pending",
+                    ),
+                )
+                SendOutcome(seq, "pending", true)
+            }
+        }
+
+    suspend fun markFailed(seq: Long) = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            db.withTransaction {
+                val row = dao.bySeq(seq) ?: return@withTransaction
+                dao.deleteBySeq(seq)
+                dao.insertOne(row.copy(seq = 0, status = "failed"))
+            }
         }
     }
 

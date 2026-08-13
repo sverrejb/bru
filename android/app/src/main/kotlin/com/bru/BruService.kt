@@ -1,12 +1,15 @@
 package com.bru
 
 import android.Manifest
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -30,15 +33,36 @@ class BruService : Service() {
     private lateinit var repo: SmsRepository
     private var observer: SmsObserver? = null
 
+    private lateinit var sender: SmsSender
+
+    private val sentReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val seq = intent?.getLongExtra(SmsSender.EXTRA_SEQ, -1L) ?: return
+            if (!sender.messageFailed(seq, resultCode == Activity.RESULT_OK)) return
+            scope.launch {
+                repo.markFailed(seq)
+                WakeNotifier(this@BruService).fire("sent_status")
+            }
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
-        val repository = SmsRepository(AppDatabase.get(this).messages(), contentResolver)
+        val repository = SmsRepository(AppDatabase.get(this), contentResolver)
         repo = repository
         startForegroundNotice()
         val app = applicationContext
-        IrohNet.startServing(app) { dispatch(app, repository, it) }
+        val smsSender = SmsSender(app)
+        sender = smsSender
+        IrohNet.startServing(app) { dispatch(app, repository, smsSender, it) }
+        ContextCompat.registerReceiver(
+            this,
+            sentReceiver,
+            IntentFilter(SmsSender.ACTION_SENT),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         ensureSmsIngest()
     }
 
@@ -48,6 +72,7 @@ class BruService : Service() {
     }
 
     override fun onDestroy() {
+        unregisterReceiver(sentReceiver)
         observer?.let { contentResolver.unregisterContentObserver(it) }
         scope.cancel()
         IrohNet.stopServing()
