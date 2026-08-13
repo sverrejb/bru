@@ -319,7 +319,7 @@ async function syncMessages() {
     console.warn('could not cache messages locally', e);
     const warning = $('cacheWarning');
     warning.textContent =
-      'Message history too large to store, will be re-fetched from your phone on every visit. Sorry about that!';
+      'Unable to save message history. Messages will be re-fetched from your phone on every visit. Sorry about that!';
     warning.hidden = false;
   }
 
@@ -340,7 +340,7 @@ async function reportHealth() {
 }
 
 async function clearData() {
-  if (confirm('Clear all Bru-related data off this browser?')) {
+  if (confirm('Clear all Bru-related data from this browser?')) {
     await clearAll();
     location.href = '/';
   }
