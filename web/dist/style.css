@@ -421,6 +421,14 @@ body {
       background: #2c4760;
     }
 
+    .btn-danger {
+      background: #a8402a;
+    }
+
+    .btn-danger:hover {
+      background: #8f331f;
+    }
+
 /* LOADER */
 .loader {
   --size: 1.7px;

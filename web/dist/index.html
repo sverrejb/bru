@@ -77,7 +77,7 @@
 
     <section id="getStarted">
       <h2>Get started</h2>
-      <p><a href="/bru.apk" download>Install the companion app</a> and pair the phone by scanning the QR-code below.</p>
+      <p><a id="apkLink" href="/bru.apk" download>Install the companion app</a> and pair the phone by scanning the QR-code below.</p>
       <p id="pairError" class="error" hidden></p>
       <div id="qr"></div>
       <span id="sessionName"></span>
@@ -94,6 +94,18 @@
       <p>You're paired with <span id="pairedPhoneName"></span>.</p>
       <a href="/phone">Go to your phone &rarr;</a>
     </section>
+
+    <dialog id="apkDialog">
+      <form method="dialog">
+        <h2>Unsigned debug build</h2>
+        <p>This APK is an unsigned debug build, not published on the Play Store. Android will warn you about
+          installing an unknown app. You'll need to allow it to sideload.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-danger" value="cancel">Cancel</button>
+          <button id="apkOkBtn" class="btn btn-accent" value="ok">Download anyway</button>
+        </div>
+      </form>
+    </dialog>
 
     <dialog id="pairDialog">
       <form method="dialog">
