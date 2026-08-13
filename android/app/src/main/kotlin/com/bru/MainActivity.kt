@@ -81,7 +81,7 @@ class MainActivity : Activity() {
             addView(content)
         })
 
-        requestNotificationPermission()
+        requestStartupPermissions()
 
         val app = applicationContext
         scope.launch {
@@ -146,10 +146,24 @@ class MainActivity : Activity() {
         BruService.start(this)
     }
 
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
-        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIFY)
+    private fun requestStartupPermissions() {
+        val wanted = mutableListOf(Manifest.permission.READ_SMS, Manifest.permission.READ_CONTACTS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            wanted += Manifest.permission.POST_NOTIFICATIONS
+        }
+        val missing = wanted.filter {
+            checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), REQ_PERMS)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        startServiceIfPaired()
     }
 
     private fun requestBatteryExemption() {
@@ -164,14 +178,14 @@ class MainActivity : Activity() {
     }
 
     private fun sayHello() {
-        wakeStatus = "Reaching the browser…"
+        wakeStatus = "Reaching the client…"
         render()
         scope.launch {
             val delivered = WakeNotifier(this@MainActivity).fire("pairing")
             wakeStatus = if (delivered) {
-                "The browser knows about this phone."
+                "The client knows about this phone."
             } else {
-                "Could not reach the browser. Make sure bru.works is open on it, then tap Reconnect."
+                "Could not reach the client. Make sure it is open and connected, then tap Reconnect."
             }
             render()
         }
@@ -180,7 +194,7 @@ class MainActivity : Activity() {
     private fun confirmUnpair() {
         AlertDialog.Builder(this)
             .setTitle("Unpair?")
-            .setMessage("Forget this browser? You'll need to pair again to reconnect.")
+            .setMessage("Forget this pairing? You'll need to pair again to reconnect.")
             .setPositiveButton("Unpair") { _, _ ->
                 Pairing.clear(this)
                 wakeStatus = null
@@ -274,7 +288,7 @@ class MainActivity : Activity() {
 
     private companion object {
         const val TAG = "bru"
-        const val REQ_NOTIFY = 1
+        const val REQ_PERMS = 1
 
         val BG = 0xFFF7F5F0.toInt()
         val FG = 0xFF3D3A35.toInt()
