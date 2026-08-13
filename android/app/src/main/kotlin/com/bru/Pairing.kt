@@ -22,6 +22,7 @@ object Pairing {
         val store = IdentityStore(context)
         store.peerId = p.peerId
         store.peerName = p.peerName
+        BruService.start(context)
         return p
     }
 
@@ -29,6 +30,7 @@ object Pairing {
         val store = IdentityStore(context)
         store.peerId = null
         store.peerName = null
+        BruService.stop(context)
     }
 
     private val ID_RE = Regex("^[0-9a-fA-F]{64}$")

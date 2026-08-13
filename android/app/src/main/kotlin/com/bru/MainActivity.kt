@@ -1,10 +1,17 @@
 package com.bru
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.text.InputType
 import android.util.Log
 import android.view.Gravity
@@ -74,11 +81,12 @@ class MainActivity : Activity() {
             addView(content)
         })
 
+        requestNotificationPermission()
+
         val app = applicationContext
         scope.launch {
             try {
                 IrohNet.myId(app)
-                IrohNet.startServing(app) { dispatch(app, it) }
             } catch (e: Throwable) {
                 Log.e(TAG, "iroh endpoint failed", e)
                 endpointError = "${e.javaClass.simpleName}: ${e.message}"
@@ -89,6 +97,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        startServiceIfPaired()
         render()
     }
 
@@ -128,7 +137,30 @@ class MainActivity : Activity() {
         }
         pasteField.text.clear()
         Toast.makeText(this, "Paired with ${params.label}", Toast.LENGTH_LONG).show()
+        requestBatteryExemption()
         sayHello()
+    }
+
+    private fun startServiceIfPaired() {
+        if (IdentityStore(this).peerId == null) return
+        BruService.start(this)
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTIFY)
+    }
+
+    private fun requestBatteryExemption() {
+        val pm = getSystemService(PowerManager::class.java)
+        if (pm.isIgnoringBatteryOptimizations(packageName)) return
+        startActivity(
+            Intent(
+                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                Uri.parse("package:$packageName"),
+            ),
+        )
     }
 
     private fun sayHello() {
@@ -242,6 +274,7 @@ class MainActivity : Activity() {
 
     private companion object {
         const val TAG = "bru"
+        const val REQ_NOTIFY = 1
 
         val BG = 0xFFF7F5F0.toInt()
         val FG = 0xFF3D3A35.toInt()

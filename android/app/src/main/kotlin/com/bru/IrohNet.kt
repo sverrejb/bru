@@ -11,6 +11,7 @@ import computer.iroh.IrohAndroid
 import computer.iroh.presetN0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -27,7 +28,7 @@ object IrohNet {
     @Volatile private var endpoint: Endpoint? = null
 
     private val serveScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    @Volatile private var serving = false
+    @Volatile private var serveJob: Job? = null
 
     suspend fun endpoint(context: Context): Endpoint {
         endpoint?.let { return it }
@@ -52,10 +53,9 @@ object IrohNet {
     suspend fun myId(context: Context): String = endpoint(context).id().toString()
 
     fun startServing(context: Context, dispatch: suspend (String) -> String) {
-        if (serving) return
-        serving = true
+        if (serveJob?.isActive == true) return
         val app = context.applicationContext
-        serveScope.launch {
+        serveJob = serveScope.launch {
             try {
                 val ep = endpoint(app)
                 while (true) {
@@ -71,10 +71,12 @@ object IrohNet {
                 Log.w(TAG, "accept loop ended — endpoint closed")
             } catch (e: Throwable) {
                 Log.e(TAG, "accept loop failed", e)
-            } finally {
-                serving = false
             }
         }
+    }
+
+    fun stopServing() {
+        serveJob?.cancel()
     }
 
     private suspend fun handle(context: Context, conn: Connection, dispatch: suspend (String) -> String) {
