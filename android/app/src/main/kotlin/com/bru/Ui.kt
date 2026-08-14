@@ -27,14 +27,19 @@ fun Context.text(
     if (center) gravity = Gravity.CENTER_HORIZONTAL
 }
 
-fun Context.button(label: String, filled: Boolean, onClick: () -> Unit) = Button(this).apply {
+fun Context.button(
+    label: String,
+    filled: Boolean,
+    small: Boolean = false,
+    onClick: () -> Unit,
+) = Button(this).apply {
     text = label
     isAllCaps = false
     typeface = Typeface.MONOSPACE
-    textSize = 15f
+    textSize = if (small) 10.5f else 15f
     letterSpacing = 0.1f
     stateListAnimator = null
-    setPadding(dp(20), dp(12), dp(20), dp(12))
+    if (small) setPadding(dp(14), dp(8), dp(14), dp(8)) else setPadding(dp(20), dp(12), dp(20), dp(12))
     background = GradientDrawable().apply {
         cornerRadius = dp(8).toFloat()
         if (filled) {

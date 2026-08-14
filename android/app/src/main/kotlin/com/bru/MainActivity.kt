@@ -28,6 +28,8 @@ class MainActivity : Activity() {
 
     private val scope = MainScope()
     private lateinit var status: TextView
+    private lateinit var permissionStatus: TextView
+    private lateinit var permissionButton: View
     private lateinit var footer: TextView
     private lateinit var scanButton: View
     private lateinit var unpair: View
@@ -44,6 +46,10 @@ class MainActivity : Activity() {
             letterSpacing = 0.08f
         }
         status = text("", 18f, FG, center = true).apply { setTextIsSelectable(true) }
+        permissionStatus = text("", 13f, MUTED, center = true)
+        permissionButton = button("Grant permissions", filled = false, small = true) {
+            openSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        }
         scanButton = button("Pair", filled = true) { scan() }
         unpair = button("Unpair", filled = false) { confirmUnpair() }
         footer = text("", 12f, MUTED, center = true)
@@ -56,7 +62,9 @@ class MainActivity : Activity() {
             addView(tagline, lp(48))
             addView(status, lp(24))
             addView(scanButton, lp(24, wrap = true))
-            addView(unpair, lp(28, wrap = true))
+            addView(unpair, lp(24, wrap = true))
+            addView(permissionStatus, lp(12))
+            addView(permissionButton, lp(28, wrap = true))
             addView(footer)
         }
         ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
@@ -106,6 +114,10 @@ class MainActivity : Activity() {
             paired -> "Paired with\n$peer"
             else -> "Not paired"
         }
+        val granted = missingPermissions().isEmpty()
+        permissionStatus.text = if (granted) "Permissions: granted" else "Permissions: NOT granted"
+        permissionButton.visibility = if (granted) View.GONE else View.VISIBLE
+
         scanButton.visibility = if (paired) View.GONE else View.VISIBLE
         unpair.visibility = if (paired) View.VISIBLE else View.GONE
         footer.text = endpointError ?: wakeStatus ?: if (paired) {
@@ -153,7 +165,7 @@ class MainActivity : Activity() {
         BruService.start(this)
     }
 
-    private fun requestStartupPermissions() {
+    private fun missingPermissions(): List<String> {
         val wanted = mutableListOf(
             Manifest.permission.READ_SMS,
             Manifest.permission.SEND_SMS,
@@ -162,11 +174,16 @@ class MainActivity : Activity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             wanted += Manifest.permission.POST_NOTIFICATIONS
         }
-        val missing = wanted.filter {
-            checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED
-        }
+        return wanted.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+    }
+
+    private fun requestStartupPermissions() {
+        val missing = missingPermissions()
         if (missing.isNotEmpty()) requestPermissions(missing.toTypedArray(), REQ_PERMS)
     }
+
+    private fun openSettings(action: String) =
+        startActivity(Intent(action, Uri.parse("package:$packageName")))
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -175,17 +192,13 @@ class MainActivity : Activity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         startServiceIfPaired()
+        render()
     }
 
     private fun requestBatteryExemption() {
         val pm = getSystemService(PowerManager::class.java)
         if (pm.isIgnoringBatteryOptimizations(packageName)) return
-        startActivity(
-            Intent(
-                Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                Uri.parse("package:$packageName"),
-            ),
-        )
+        openSettings(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
     }
 
     private fun sayHello() {
