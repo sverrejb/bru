@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.ImageFormat
-import android.graphics.Typeface
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -113,7 +112,7 @@ class QrScanActivity : Activity() {
             setSingleLine()
             inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             imeOptions = EditorInfo.IME_ACTION_DONE
-            typeface = Typeface.MONOSPACE
+            typeface = MONO
             textSize = 13f
             setTextColor(FG)
             setHintTextColor(MUTED)

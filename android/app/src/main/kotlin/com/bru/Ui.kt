@@ -7,6 +7,9 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.TextView
 
+val MONO: Typeface = Typeface.create("serif-monospace", Typeface.NORMAL)
+val MONO_BOLD: Typeface = Typeface.create("serif-monospace", Typeface.BOLD)
+
 val BG = 0xFFF7F5F0.toInt()
 val FG = 0xFF3D3A35.toInt()
 val MUTED = 0xFF837D72.toInt()
@@ -23,7 +26,7 @@ fun Context.text(
     text = s
     textSize = size
     setTextColor(color)
-    typeface = if (bold) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD) else Typeface.MONOSPACE
+    typeface = if (bold) MONO_BOLD else MONO
     if (center) gravity = Gravity.CENTER_HORIZONTAL
 }
 
@@ -35,7 +38,7 @@ fun Context.button(
 ) = Button(this).apply {
     text = label
     isAllCaps = false
-    typeface = Typeface.MONOSPACE
+    typeface = MONO
     textSize = if (small) 10.5f else 15f
     letterSpacing = 0.1f
     stateListAnimator = null
