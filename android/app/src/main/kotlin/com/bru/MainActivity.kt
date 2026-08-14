@@ -53,6 +53,10 @@ class MainActivity : Activity() {
         scanButton = button("Pair", filled = true) { scan() }
         unpair = button("Unpair", filled = false) { confirmUnpair() }
         footer = text("", 12f, MUTED, center = true)
+        val licenses = text("Open source licenses", 12f, MUTED, center = true).apply {
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+            setOnClickListener { openUrl("https://bru.works/licenses") }
+        }
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -65,7 +69,8 @@ class MainActivity : Activity() {
             addView(unpair, lp(24, wrap = true))
             addView(permissionStatus, lp(12))
             addView(permissionButton, lp(28, wrap = true))
-            addView(footer)
+            addView(footer, lp(12))
+            addView(licenses, lp(wrap = true))
         }
         ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
             val bars = insets.getInsets(
@@ -184,6 +189,8 @@ class MainActivity : Activity() {
 
     private fun openSettings(action: String) =
         startActivity(Intent(action, Uri.parse("package:$packageName")))
+
+    private fun openUrl(url: String) = startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
