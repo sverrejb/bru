@@ -56,6 +56,16 @@ suspend fun dispatch(
             }
         }
 
+        "clipboard" -> {
+            val text = req.optString("text")
+            if (text.isEmpty()) {
+                errorJson("empty clipboard")
+            } else {
+                BruService.notifyClipboard(context, text)
+                JSONObject().put("ok", true).toString()
+            }
+        }
+
         else -> errorJson("unsupported op")
     }
 }

@@ -59,5 +59,7 @@ dependencies {
     }
     implementation("net.java.dev.jna:jna:5.15.0@aar")
 
+    implementation("com.google.zxing:core:3.5.3")
+
     testImplementation("junit:junit:4.13.2")
 }

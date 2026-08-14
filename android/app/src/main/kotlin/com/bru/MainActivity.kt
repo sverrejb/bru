@@ -5,20 +5,14 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.text.InputType
 import android.util.Log
 import android.view.Gravity
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -35,29 +29,23 @@ class MainActivity : Activity() {
     private val scope = MainScope()
     private lateinit var status: TextView
     private lateinit var footer: TextView
-    private lateinit var pasteField: EditText
-    private lateinit var pasteBar: View
-    private lateinit var primary: View
+    private lateinit var scanButton: View
+    private lateinit var unpair: View
     private var endpointError: String? = null
     private var wakeStatus: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val title = text("bru", 56f, FG, bold = true, center = true).apply {
+        val title = text("Bru", 56f, FG, bold = true, center = true).apply {
             letterSpacing = 0.3f
         }
         val tagline = text("Bidirectional Remote Uplink", 13f, MUTED, center = true).apply {
             letterSpacing = 0.08f
         }
         status = text("", 18f, FG, center = true).apply { setTextIsSelectable(true) }
-        pasteBar = buildPasteBar()
-        primary = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            addView(button("Reconnect", filled = true) { sayHello() }, lp(12, wrap = true))
-            addView(button("Unpair", filled = false) { confirmUnpair() }, lp(wrap = true))
-        }
+        scanButton = button("Pair", filled = true) { scan() }
+        unpair = button("Unpair", filled = false) { confirmUnpair() }
         footer = text("", 12f, MUTED, center = true)
 
         val content = LinearLayout(this).apply {
@@ -67,8 +55,8 @@ class MainActivity : Activity() {
             addView(title, lp(4))
             addView(tagline, lp(48))
             addView(status, lp(24))
-            addView(pasteBar, lp(24))
-            addView(primary, lp(28))
+            addView(scanButton, lp(24, wrap = true))
+            addView(unpair, lp(28, wrap = true))
             addView(footer)
         }
         ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
@@ -84,6 +72,7 @@ class MainActivity : Activity() {
         })
 
         requestStartupPermissions()
+        consumePairLink(intent)
 
         val app = applicationContext
         scope.launch {
@@ -117,22 +106,43 @@ class MainActivity : Activity() {
             paired -> "Paired with\n$peer"
             else -> "Not paired"
         }
-        pasteBar.visibility = if (paired) View.GONE else View.VISIBLE
-        primary.visibility = if (paired) View.VISIBLE else View.GONE
+        scanButton.visibility = if (paired) View.GONE else View.VISIBLE
+        unpair.visibility = if (paired) View.VISIBLE else View.GONE
         footer.text = endpointError ?: wakeStatus ?: if (paired) {
             ""
         } else {
-            "Open bru.works on your computer, then copy the pair link printed under the QR code and paste it above."
+            "Open https://bru.works on your computer, then tap Pair to scan the QR code."
         }
     }
 
-    private fun pair() {
-        val params = Pairing.apply(this, pasteField.text.toString())
+    private fun scan() = startActivityForResult(Intent(this, QrScanActivity::class.java), REQ_SCAN)
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode != REQ_SCAN || resultCode != RESULT_OK) {
+            super.onActivityResult(requestCode, resultCode, data)
+            return
+        }
+        data?.getStringExtra(QrScanActivity.EXTRA_RESULT)?.let { commitPairing(it) }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        consumePairLink(intent)
+    }
+
+    private fun consumePairLink(intent: Intent?) {
+        val link = intent?.getStringExtra(EXTRA_PAIR_LINK) ?: return
+        intent.removeExtra(EXTRA_PAIR_LINK)
+        commitPairing(link)
+    }
+
+    private fun commitPairing(link: String) {
+        val params = Pairing.apply(this, link)
         if (params == null) {
             Toast.makeText(this, "Not a bru pairing link", Toast.LENGTH_LONG).show()
             return
         }
-        pasteField.text.clear()
         Toast.makeText(this, "Paired with ${params.label}", Toast.LENGTH_LONG).show()
         requestBatteryExemption()
         sayHello()
@@ -184,9 +194,9 @@ class MainActivity : Activity() {
         scope.launch {
             val delivered = WakeNotifier(this@MainActivity).fire("pairing")
             wakeStatus = if (delivered) {
-                "The client knows about this phone."
+                null
             } else {
-                "Could not reach the client. Make sure it is open and connected, then tap Reconnect."
+                "Could not reach the client. Make sure it is open, then unpair and pair again."
             }
             render()
         }
@@ -206,84 +216,15 @@ class MainActivity : Activity() {
             .show()
     }
 
-    private fun buildPasteBar(): View {
-        pasteField = EditText(this).apply {
-            hint = "paste the pair link"
-            setSingleLine()
-            inputType = InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-            imeOptions = EditorInfo.IME_ACTION_DONE
-            typeface = Typeface.MONOSPACE
-            textSize = 13f
-            setTextColor(FG)
-            setHintTextColor(MUTED)
-            setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    pair()
-                    true
-                } else {
-                    false
-                }
-            }
-        }
-        val pairButton = button("Pair", filled = true) { pair() }
-        return LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            addView(
-                pasteField,
-                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f),
-            )
-            addView(
-                pairButton,
-                LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                ).apply { marginStart = dp(8) },
-            )
-        }
-    }
-
-    private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
-
     private fun lp(bottomDp: Int = 0, wrap: Boolean = false) = LinearLayout.LayoutParams(
         if (wrap) LinearLayout.LayoutParams.WRAP_CONTENT else LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.WRAP_CONTENT,
     ).apply { bottomMargin = dp(bottomDp) }
 
-    private fun text(s: String, size: Float, color: Int, bold: Boolean = false, center: Boolean = false) =
-        TextView(this).apply {
-            text = s
-            textSize = size
-            setTextColor(color)
-            typeface = if (bold) Typeface.create(Typeface.MONOSPACE, Typeface.BOLD) else Typeface.MONOSPACE
-            if (center) gravity = Gravity.CENTER_HORIZONTAL
-        }
-
-    private fun button(label: String, filled: Boolean, onClick: () -> Unit) = Button(this).apply {
-        text = label
-        isAllCaps = false
-        typeface = Typeface.MONOSPACE
-        textSize = 15f
-        letterSpacing = 0.1f
-        stateListAnimator = null
-        setPadding(dp(20), dp(12), dp(20), dp(12))
-        background = GradientDrawable().apply {
-            cornerRadius = dp(8).toFloat()
-            if (filled) setColor(FG) else {
-                setColor(BG)
-                setStroke(dp(2), FG)
-            }
-        }
-        setTextColor(if (filled) BG else FG)
-        setOnClickListener { onClick() }
-    }
-
-    private companion object {
-        const val TAG = "bru"
-        const val REQ_PERMS = 1
-
-        val BG = 0xFFF7F5F0.toInt()
-        val FG = 0xFF3D3A35.toInt()
-        val MUTED = 0xFF837D72.toInt()
+    companion object {
+        private const val TAG = "bru"
+        private const val REQ_PERMS = 1
+        private const val REQ_SCAN = 2
+        const val EXTRA_PAIR_LINK = "pair_link"
     }
 }

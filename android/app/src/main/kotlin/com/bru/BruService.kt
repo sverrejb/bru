@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -113,6 +114,9 @@ class BruService : Service() {
                 setShowBadge(false)
             },
         )
+        nm.createNotificationChannel(
+            NotificationChannel(CLIP_CHANNEL, "Clipboard", NotificationManager.IMPORTANCE_DEFAULT),
+        )
         val notification: Notification = Notification.Builder(this, CHANNEL)
             .setContentTitle("Bru active")
             .setSmallIcon(R.drawable.ic_bru_notification)
@@ -130,6 +134,29 @@ class BruService : Service() {
         private const val TAG = "bru"
         private const val CHANNEL = "bru_status"
         private const val NOTIF_ID = 1
+        private const val CLIP_CHANNEL = "bru_clipboard"
+        private const val CLIP_NOTIF_ID = 2
+
+        fun notifyClipboard(context: Context, text: String) {
+            val tap = PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, ClipboardActivity::class.java)
+                    .putExtra(ClipboardActivity.EXTRA_TEXT, text)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            context.getSystemService(NotificationManager::class.java).notify(
+                CLIP_NOTIF_ID,
+                Notification.Builder(context, CLIP_CHANNEL)
+                    .setContentTitle("Clipboard from the client")
+                    .setContentText("Tap to copy")
+                    .setSmallIcon(R.drawable.ic_bru_notification)
+                    .setAutoCancel(true)
+                    .setContentIntent(tap)
+                    .build(),
+            )
+        }
 
         fun start(context: Context) {
             context.startForegroundService(Intent(context, BruService::class.java))

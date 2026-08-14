@@ -7,8 +7,10 @@ object Pairing {
         val label: String get() = peerLabel(peerId, peerName)
     }
 
+    fun shortId(peerId: String): String = "${peerId.take(12)}…"
+
     fun peerLabel(peerId: String, peerName: String?): String =
-        peerName?.takeIf { it.isNotBlank() } ?: "${peerId.take(12)}…"
+        peerName?.takeIf { it.isNotBlank() } ?: shortId(peerId)
 
     fun parse(input: String): Params? {
         val frag = input.substringAfter("#", input).trim()

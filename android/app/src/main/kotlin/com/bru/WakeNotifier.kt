@@ -26,6 +26,9 @@ class WakeNotifier(private val context: Context) {
         return false
     }
 
+    suspend fun sendClipboard(text: String): Boolean =
+        IrohNet.dialPeer(context, JSONObject().put("op", "clipboard").put("text", text).toString())
+
     companion object {
         private const val TAG = "bru"
         private const val RETRY_ATTEMPTS = 3
