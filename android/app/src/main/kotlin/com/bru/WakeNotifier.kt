@@ -38,7 +38,7 @@ class WakeNotifier(private val context: Context) {
         fun pairedPeer(context: Context): String? {
             val store = IdentityStore(context)
             val id = store.peerId ?: return null
-            return store.peerName?.takeIf { it.isNotBlank() } ?: "${id.take(12)}…"
+            return Pairing.peerLabel(id, store.peerName)
         }
     }
 }

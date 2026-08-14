@@ -37,7 +37,7 @@ class MainActivity : Activity() {
     private lateinit var footer: TextView
     private lateinit var pasteField: EditText
     private lateinit var pasteBar: View
-    private lateinit var primaryHolder: LinearLayout
+    private lateinit var primary: View
     private var endpointError: String? = null
     private var wakeStatus: String? = null
 
@@ -52,9 +52,11 @@ class MainActivity : Activity() {
         }
         status = text("", 18f, FG, center = true).apply { setTextIsSelectable(true) }
         pasteBar = buildPasteBar()
-        primaryHolder = LinearLayout(this).apply {
+        primary = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
+            addView(button("Reconnect", filled = true) { sayHello() }, lp(12, wrap = true))
+            addView(button("Unpair", filled = false) { confirmUnpair() }, lp(wrap = true))
         }
         footer = text("", 12f, MUTED, center = true)
 
@@ -66,7 +68,7 @@ class MainActivity : Activity() {
             addView(tagline, lp(48))
             addView(status, lp(24))
             addView(pasteBar, lp(24))
-            addView(primaryHolder, lp(28))
+            addView(primary, lp(28))
             addView(footer)
         }
         ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
@@ -116,12 +118,7 @@ class MainActivity : Activity() {
             else -> "Not paired"
         }
         pasteBar.visibility = if (paired) View.GONE else View.VISIBLE
-        primaryHolder.visibility = if (paired) View.VISIBLE else View.GONE
-        primaryHolder.removeAllViews()
-        if (paired) {
-            primaryHolder.addView(button("Reconnect", filled = true) { sayHello() }, buttonLp(12))
-            primaryHolder.addView(button("Unpair", filled = false) { confirmUnpair() }, buttonLp())
-        }
+        primary.visibility = if (paired) View.VISIBLE else View.GONE
         footer.text = endpointError ?: wakeStatus ?: if (paired) {
             ""
         } else {
@@ -248,13 +245,8 @@ class MainActivity : Activity() {
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
-    private fun lp(bottomDp: Int) = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-    ).apply { bottomMargin = dp(bottomDp) }
-
-    private fun buttonLp(bottomDp: Int = 0) = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.WRAP_CONTENT,
+    private fun lp(bottomDp: Int = 0, wrap: Boolean = false) = LinearLayout.LayoutParams(
+        if (wrap) LinearLayout.LayoutParams.WRAP_CONTENT else LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.WRAP_CONTENT,
     ).apply { bottomMargin = dp(bottomDp) }
 
@@ -283,10 +275,6 @@ class MainActivity : Activity() {
             }
         }
         setTextColor(if (filled) BG else FG)
-        layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-        )
         setOnClickListener { onClick() }
     }
 

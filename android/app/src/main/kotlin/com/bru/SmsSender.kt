@@ -20,25 +20,17 @@ class SmsSender(private val context: Context) {
         val sms = manager()
         val parts = sms.divideMessage(body)
         trackers[seq] = Tracker(parts.size.coerceAtLeast(1))
-        val intent = Intent(ACTION_SENT)
-            .setPackage(context.packageName)
-            .putExtra(EXTRA_SEQ, seq)
-        val sentIntents = ArrayList<PendingIntent>(parts.size)
-        for (i in parts.indices) {
-            sentIntents.add(
-                PendingIntent.getBroadcast(
-                    context,
-                    requestCode(seq, i),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
-        }
+        val sent = PendingIntent.getBroadcast(
+            context,
+            seq.toInt(),
+            Intent(ACTION_SENT).setPackage(context.packageName).putExtra(EXTRA_SEQ, seq),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
         try {
             if (parts.size <= 1) {
-                sms.sendTextMessage(to, null, body, sentIntents.firstOrNull(), null)
+                sms.sendTextMessage(to, null, body, sent, null)
             } else {
-                sms.sendMultipartTextMessage(to, null, parts, sentIntents, null)
+                sms.sendMultipartTextMessage(to, null, parts, ArrayList(parts.map { sent }), null)
             }
         } catch (e: Exception) {
             trackers.remove(seq)
@@ -66,7 +58,5 @@ class SmsSender(private val context: Context) {
     companion object {
         const val ACTION_SENT = "com.bru.SMS_SENT"
         const val EXTRA_SEQ = "seq"
-
-        fun requestCode(seq: Long, part: Int): Int = (seq.toInt() shl 8) or (part and 0xff)
     }
 }

@@ -20,6 +20,7 @@ import android.provider.Telephony
 import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import androidx.room.Room
 import com.bru.db.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,13 +51,12 @@ class BruService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val repository = SmsRepository(AppDatabase.get(this), contentResolver)
-        repo = repository
+        val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "bru.db").build()
+        repo = SmsRepository(db, contentResolver)
         startForegroundNotice()
         val app = applicationContext
-        val smsSender = SmsSender(app)
-        sender = smsSender
-        IrohNet.startServing(app) { dispatch(app, repository, smsSender, it) }
+        sender = SmsSender(app)
+        IrohNet.startServing(app) { dispatch(app, repo, sender, it) }
         ContextCompat.registerReceiver(
             this,
             sentReceiver,

@@ -4,8 +4,11 @@ import android.content.Context
 
 object Pairing {
     data class Params(val peerId: String, val peerName: String?) {
-        val label: String get() = peerName?.takeIf { it.isNotBlank() } ?: "${peerId.take(12)}…"
+        val label: String get() = peerLabel(peerId, peerName)
     }
+
+    fun peerLabel(peerId: String, peerName: String?): String =
+        peerName?.takeIf { it.isNotBlank() } ?: "${peerId.take(12)}…"
 
     fun parse(input: String): Params? {
         val frag = input.substringAfter("#", input).trim()

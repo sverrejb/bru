@@ -8,64 +8,52 @@ import androidx.room.withTransaction
 import com.bru.db.AppDatabase
 import com.bru.db.MessageLog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-internal const val PER_THREAD_LIMIT = 100
-internal const val RECONCILE_WINDOW_MS = 24 * 60 * 60 * 1000L
+private const val PER_THREAD_LIMIT = 100
+private const val RECONCILE_WINDOW_MS = 24 * 60 * 60 * 1000L
 
 data class SendOutcome(val seq: Long, val status: String, val isNew: Boolean)
 
 internal fun tempThreadId(address: String): Long =
     Int.MIN_VALUE.toLong() + address.hashCode()
 
-internal fun takeThreadSlot(seen: MutableMap<Long, Int>, threadId: Long): Boolean {
-    val n = seen.getOrDefault(threadId, 0)
-    if (n >= PER_THREAD_LIMIT) return false
-    seen[threadId] = n + 1
-    return true
-}
-
 class SmsRepository(
     private val db: AppDatabase,
     private val resolver: ContentResolver,
 ) {
     private val dao = db.messages()
-    private val mutex = Mutex()
 
     suspend fun ingestNew(): Int = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            val provider = query(dao.maxProviderId() ?: 0L)
-            if (provider.isEmpty()) return@withLock 0
-            db.withTransaction {
-                val pending = dao
-                    .pendingSince(System.currentTimeMillis() - RECONCILE_WINDOW_MS)
-                    .toMutableList()
-                val rows = provider.map { row ->
-                    val match = if (row.direction == "out") {
-                        pending.lastOrNull { it.address == row.address && it.body == row.body }
-                    } else {
-                        null
-                    }
-                    if (match == null) {
-                        row
-                    } else {
-                        pending.remove(match)
-                        dao.deleteBySeq(match.seq)
-                        row.copy(clientId = match.clientId)
-                    }
+        val provider = query(dao.maxProviderId() ?: 0L)
+        if (provider.isEmpty()) return@withContext 0
+        db.withTransaction {
+            val pending = dao
+                .pendingSince(System.currentTimeMillis() - RECONCILE_WINDOW_MS)
+                .toMutableList()
+            val rows = provider.map { row ->
+                val match = if (row.direction == "out") {
+                    pending.lastOrNull { it.address == row.address && it.body == row.body }
+                } else {
+                    null
                 }
-                dao.insertAll(rows).count { it != -1L }
+                if (match == null) {
+                    row
+                } else {
+                    pending.remove(match)
+                    dao.deleteBySeq(match.seq)
+                    row.copy(clientId = match.clientId)
+                }
             }
+            dao.insertAll(rows).count { it != -1L }
         }
     }
 
     suspend fun getOrCreatePending(clientId: String, to: String, body: String): SendOutcome =
         withContext(Dispatchers.IO) {
-            mutex.withLock {
+            db.withTransaction {
                 dao.byClientId(clientId)?.let {
-                    return@withLock SendOutcome(it.seq, it.status, false)
+                    return@withTransaction SendOutcome(it.seq, it.status, false)
                 }
                 val seq = dao.insertOne(
                     MessageLog(
@@ -83,12 +71,10 @@ class SmsRepository(
         }
 
     suspend fun markFailed(seq: Long) = withContext(Dispatchers.IO) {
-        mutex.withLock {
-            db.withTransaction {
-                val row = dao.bySeq(seq) ?: return@withTransaction
-                dao.deleteBySeq(seq)
-                dao.insertOne(row.copy(seq = 0, status = "failed"))
-            }
+        db.withTransaction {
+            val row = dao.bySeq(seq) ?: return@withTransaction
+            dao.deleteBySeq(seq)
+            dao.insertOne(row.copy(seq = 0, status = "failed"))
         }
     }
 
@@ -125,7 +111,9 @@ class SmsRepository(
 
             while (c.moveToNext()) {
                 val threadId = c.getLong(iThread)
-                if (capped && !takeThreadSlot(perThread, threadId)) continue
+                val taken = perThread.getOrDefault(threadId, 0)
+                if (capped && taken >= PER_THREAD_LIMIT) continue
+                perThread[threadId] = taken + 1
                 val rawAddress = c.getString(iAddr)
                 val direction = PhoneNumbers.directionFromType(c.getInt(iType))
                 out += MessageLog(
