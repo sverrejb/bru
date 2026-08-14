@@ -1,4 +1,4 @@
-package com.bru.db
+package works.bru.db
 
 import androidx.room.Database
 import androidx.room.RoomDatabase

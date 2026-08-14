@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 import android.Manifest
 import android.app.Activity
@@ -22,7 +22,7 @@ import android.util.Log
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.room.Room
-import com.bru.db.AppDatabase
+import works.bru.db.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

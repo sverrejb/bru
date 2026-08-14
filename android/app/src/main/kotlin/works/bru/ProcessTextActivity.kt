@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 import android.app.Activity
 import android.content.Intent

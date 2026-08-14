@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 import android.app.PendingIntent
 import android.content.Context
@@ -56,7 +56,7 @@ class SmsSender(private val context: Context) {
         }
 
     companion object {
-        const val ACTION_SENT = "com.bru.SMS_SENT"
+        const val ACTION_SENT = "works.bru.SMS_SENT"
         const val EXTRA_SEQ = "seq"
     }
 }

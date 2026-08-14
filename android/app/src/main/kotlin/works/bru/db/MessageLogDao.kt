@@ -1,4 +1,4 @@
-package com.bru.db
+package works.bru.db
 
 import androidx.room.Dao
 import androidx.room.Insert

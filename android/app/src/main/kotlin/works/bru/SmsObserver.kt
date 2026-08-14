@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 import android.database.ContentObserver
 import android.os.Handler

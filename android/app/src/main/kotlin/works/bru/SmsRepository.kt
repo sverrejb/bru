@@ -1,12 +1,12 @@
-package com.bru
+package works.bru
 
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
 import androidx.room.withTransaction
-import com.bru.db.AppDatabase
-import com.bru.db.MessageLog
+import works.bru.db.AppDatabase
+import works.bru.db.MessageLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

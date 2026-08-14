@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 import android.content.BroadcastReceiver
 import android.content.Context

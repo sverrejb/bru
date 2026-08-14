@@ -1,4 +1,4 @@
-package com.bru
+package works.bru
 
 object PhoneNumbers {
     //TODO: Make this work for all cases, not just norwegian numbers.

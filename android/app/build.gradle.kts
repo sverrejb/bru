@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.bru"
+    namespace = "works.bru"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.bru"
+        applicationId = "works.bru"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

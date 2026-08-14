@@ -1,8 +1,8 @@
-package com.bru
+package works.bru
 
 import android.content.Context
 import android.util.Log
-import com.bru.db.MessageLog
+import works.bru.db.MessageLog
 import org.json.JSONArray
 import org.json.JSONObject
 
