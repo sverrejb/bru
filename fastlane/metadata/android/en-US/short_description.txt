@@ -1,0 +1,1 @@
+Read and send SMS from your computer via your phone.

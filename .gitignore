@@ -7,7 +7,6 @@ target/
 build/
 local.properties
 *.apk
-!web/dist/bru.apk
 *.aab
 *.keystore
 captures/

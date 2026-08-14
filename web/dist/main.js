@@ -17,21 +17,6 @@ const $ = (id) => /** @type {any} */ (document.getElementById(id));
 const rejectAfter = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 
-/** @type {HTMLDialogElement} */
-const apkDialog = $('apkDialog');
-const apkLink = $('apkLink');
-apkLink.addEventListener('click', (e) => {
-  e.preventDefault();
-  apkDialog.showModal();
-});
-apkDialog.addEventListener('close', () => {
-  if (apkDialog.returnValue !== 'ok') return;
-  const a = document.createElement('a');
-  a.href = apkLink.href;
-  a.download = '';
-  a.click();
-});
-
 const phone = loadPhone();
 if (phone) {
   $('getStarted').hidden = true;

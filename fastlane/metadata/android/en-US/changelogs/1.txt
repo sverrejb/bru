@@ -1,0 +1,5 @@
+First release.
+
+* Pair with a client by scanning a QR code
+* Read and send SMS from the paired client
+* Share clipboard text in both directions

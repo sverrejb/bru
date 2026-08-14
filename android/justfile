@@ -30,11 +30,6 @@ install:
 launch:
     {{adb}} shell am start -n {{activity}}
 
-# Build the debug APK and publish it as the web download
-beta: build
-    cp app/build/outputs/apk/debug/app-debug.apk ../web/dist/bru.apk
-    @du -h ../web/dist/bru.apk
-
 # Build the release APK
 release:
     ./gradlew :app:assembleRelease

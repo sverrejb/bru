@@ -1,0 +1,27 @@
+Bru is a Bidirectional Remote Uplink for your Android Phone, and also the Norwegian word for "bridge".
+
+It links your phone to a client in your browser over a direct, end-to-end-encrypted connection, so you can deal with your phone without picking it up. There is no account to create, no server holding your messages.
+
+FEATURES
+
+* Read and send SMS. Handle conversations with a real keyboard instead of reaching for your phone.
+
+* Share a clipboard. Send text in either direction. No more retyping addresses or emailing yourself long links.
+
+HOW IT WORKS
+
+Pairing is a one-time QR code scan. After that your phone and your client find each other directly using iroh, which establishes an authenticated, end-to-end-encrypted connection between the two devices.
+
+Your messages are never uploaded anywhere. There is no Bru account, no Bru server storing your data, and no analytics or tracking of any kind.
+
+ABOUT THE PERMISSIONS
+
+Bru asks for the following permissions 
+
+* SMS (read and send).  The core feature. Messages are read from the phone's own SMS store and relayed only to the client you paired with.
+
+* Contacts. Used solely to show names instead of bare phone numbers. Contact data is never sent anywhere else.
+
+* Camera. Used to scan the pairing QR code. Can be done with a pairing code instead.
+
+Bru is free software. The full source is available, and the app contains no proprietary libraries, advertising, or trackers.
