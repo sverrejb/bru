@@ -18,7 +18,7 @@ android {
         versionName = "1.0.0"
 
         ndk {
-            abiFilters += listOf("arm64-v8a")
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
     }
 
@@ -31,6 +31,12 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += listOf("darwin-*/**", "linux-*/**", "win32-*/**")
+        }
     }
 
 }
@@ -54,10 +60,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room")
     ksp("androidx.room:room-compiler:$room")
 
-    implementation("computer.iroh:iroh:1.0.0") {
-        exclude(group = "net.java.dev.jna", module = "jna")
-    }
-    implementation("net.java.dev.jna:jna:5.15.0@aar")
+    implementation("computer.iroh:iroh-android:1.1.0")
 
     implementation("com.google.zxing:core:3.5.3")
 
