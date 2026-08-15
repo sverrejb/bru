@@ -1,4 +1,4 @@
-# bru
+# Bru
 
 A **B**idirectional **R**emote **U**plink (also Norwegian for "bridge").
 
@@ -11,7 +11,7 @@ forwarding or fiddling with network settings.
 * **Send and recieve text to clipboard.** No more typing things manually or struggeling with long URL's you rather browse on your computer.
 
 
-> Built on iroh, which technically makes this *iroh-bru*. No relation to Scotland's
+> Built on iroh, which kind of makes this *iroh-bru*. No relation to Scotland's
 > **other** national drink.
 
 ## License
