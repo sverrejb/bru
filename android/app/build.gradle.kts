@@ -6,6 +6,8 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val baseVersionCode = 1
+
 android {
     namespace = "works.bru"
     compileSdk = 36
@@ -14,11 +16,26 @@ android {
         applicationId = "works.bru"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
+        versionCode = baseVersionCode
         versionName = "1.0.0"
+    }
 
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+    flavorDimensions += "abi"
+
+    productFlavors {
+        create("armv7") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "armeabi-v7a"
+            }
+            versionCode = 100 * baseVersionCode + 1
+        }
+        create("arm64") {
+            dimension = "abi"
+            ndk {
+                abiFilters += "arm64-v8a"
+            }
+            versionCode = 100 * baseVersionCode + 2
         }
     }
 

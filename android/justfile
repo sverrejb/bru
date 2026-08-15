@@ -6,6 +6,7 @@ export JAVA_HOME := "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/H
 adb      := "$HOME/Library/Android/sdk/platform-tools/adb"
 pkg      := "works.bru"
 activity := pkg + "/.MainActivity"
+abi      := "Arm64"
 
 # List available recipes
 default:
@@ -13,18 +14,18 @@ default:
 
 # Build the debug APK
 build:
-    ./gradlew :app:assembleDebug
+    ./gradlew :app:assemble{{abi}}Debug
 
 # Run the JVM unit tests
 test:
-    ./gradlew :app:testDebugUnitTest
+    ./gradlew :app:test{{abi}}DebugUnitTest
 
 # Install the debug build, then launch it on the connected device
 run: install launch
 
 # Install the debug build on the connected device
 install:
-    ./gradlew :app:installDebug
+    ./gradlew :app:install{{abi}}Debug
 
 # Launch the app on the device
 launch:
@@ -37,15 +38,15 @@ release:
 # Build the release App Bundle (.aab)
 bundle:
     ./gradlew :app:bundleRelease
-    @du -h app/build/outputs/bundle/release/*.aab
+    @du -h app/build/outputs/bundle/*/*.aab
 
-# Build release and print the APK size
+# Build release and print the APK size, one per ABI
 size: release
-    @du -h app/build/outputs/apk/release/*.apk
+    @du -h app/build/outputs/apk/*/release/*.apk
 
 # Show the debug runtime dependency tree
 deps:
-    ./gradlew :app:dependencies --configuration debugRuntimeClasspath
+    ./gradlew :app:dependencies --configuration {{lowercase(abi)}}DebugRuntimeClasspath
 
 # Measure cold-start time (force-stop, then timed launch)
 coldstart:
