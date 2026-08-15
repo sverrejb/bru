@@ -6,8 +6,6 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-val baseVersionCode = 1
-
 android {
     namespace = "works.bru"
     compileSdk = 36
@@ -16,7 +14,7 @@ android {
         applicationId = "works.bru"
         minSdk = 26
         targetSdk = 36
-        versionCode = baseVersionCode
+        versionCode = 1
         versionName = "1.0.0"
     }
 
@@ -28,14 +26,12 @@ android {
             ndk {
                 abiFilters += "armeabi-v7a"
             }
-            versionCode = 100 * baseVersionCode + 1
         }
         create("arm64") {
             dimension = "abi"
             ndk {
                 abiFilters += "arm64-v8a"
             }
-            versionCode = 100 * baseVersionCode + 2
         }
     }
 
@@ -56,6 +52,15 @@ android {
         }
     }
 
+}
+
+androidComponents {
+    onVariants { variant ->
+        val abiOffset = if (variant.flavorName == "arm64") 2 else 1
+        variant.outputs.forEach { output ->
+            output.versionCode.set(100 * 1 + abiOffset)
+        }
+    }
 }
 
 kotlin {
