@@ -8,7 +8,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "message_log",
     indices = [
-        Index(value = ["provider_id"], unique = true),
+        Index(value = ["address", "date", "body", "direction"], unique = true),
         Index(value = ["client_id"], unique = true),
     ],
 )

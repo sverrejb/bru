@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 
 private const val PER_THREAD_LIMIT = 100
 private const val RECONCILE_WINDOW_MS = 24 * 60 * 60 * 1000L
+private const val RESCAN_LIMIT = 200
 
 data class SendOutcome(val seq: Long, val status: String, val isNew: Boolean)
 
@@ -25,7 +26,7 @@ class SmsRepository(
     private val dao = db.messages()
 
     suspend fun ingestNew(): Int = withContext(Dispatchers.IO) {
-        val provider = query(dao.maxProviderId() ?: 0L)
+        val provider = query(backfill = !dao.hasIngested())
         if (provider.isEmpty()) return@withContext 0
         db.withTransaction {
             val pending = dao
@@ -33,7 +34,9 @@ class SmsRepository(
                 .toMutableList()
             val rows = provider.map { row ->
                 val match = if (row.direction == "out") {
-                    pending.lastOrNull { it.address == row.address && it.body == row.body }
+                    pending.lastOrNull {
+                        it.address == row.address && it.body == row.body && row.date >= it.date
+                    }
                 } else {
                     null
                 }
@@ -82,8 +85,7 @@ class SmsRepository(
 
     suspend fun messages(since: Long, limit: Int): List<MessageLog> = dao.since(since, limit)
 
-    private fun query(sinceId: Long): List<MessageLog> {
-        val capped = sinceId == 0L
+    private fun query(backfill: Boolean): List<MessageLog> {
         val perThread = HashMap<Long, Int>()
         val nameCache = HashMap<String, String?>()
         val out = ArrayList<MessageLog>()
@@ -96,12 +98,11 @@ class SmsRepository(
             Telephony.Sms.DATE,
             Telephony.Sms.TYPE,
         )
-        val selection = "${Telephony.Sms._ID} > ? AND ${Telephony.Sms.TYPE} IN " +
+        val selection = "${Telephony.Sms.TYPE} IN " +
             "(${Telephony.Sms.MESSAGE_TYPE_INBOX}, ${Telephony.Sms.MESSAGE_TYPE_SENT})"
-        val args = arrayOf(sinceId.toString())
         val sort = "${Telephony.Sms._ID} DESC"
 
-        resolver.query(Telephony.Sms.CONTENT_URI, projection, selection, args, sort)?.use { c ->
+        resolver.query(Telephony.Sms.CONTENT_URI, projection, selection, null, sort)?.use { c ->
             val iId = c.getColumnIndexOrThrow(Telephony.Sms._ID)
             val iThread = c.getColumnIndexOrThrow(Telephony.Sms.THREAD_ID)
             val iAddr = c.getColumnIndexOrThrow(Telephony.Sms.ADDRESS)
@@ -111,9 +112,13 @@ class SmsRepository(
 
             while (c.moveToNext()) {
                 val threadId = c.getLong(iThread)
-                val taken = perThread.getOrDefault(threadId, 0)
-                if (capped && taken >= PER_THREAD_LIMIT) continue
-                perThread[threadId] = taken + 1
+                if (backfill) {
+                    val taken = perThread.getOrDefault(threadId, 0)
+                    if (taken >= PER_THREAD_LIMIT) continue
+                    perThread[threadId] = taken + 1
+                } else if (out.size >= RESCAN_LIMIT) {
+                    break
+                }
                 val rawAddress = c.getString(iAddr)
                 val direction = PhoneNumbers.directionFromType(c.getInt(iType))
                 out += MessageLog(

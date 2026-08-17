@@ -52,7 +52,9 @@ class BruService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "bru.db").build()
+        val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "bru.db")
+            .addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
         repo = SmsRepository(db, contentResolver)
         startForegroundNotice()
         val app = applicationContext

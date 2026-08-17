@@ -1,10 +1,16 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
+
+val keystoreProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val uploadKeystore: String? = keystoreProperties.getProperty("uploadKeystore")
 
 android {
     namespace = "works.bru"
@@ -33,11 +39,29 @@ android {
                 abiFilters += "arm64-v8a"
             }
         }
+        create("play") {
+            dimension = "abi"
+            ndk {
+                abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+            }
+        }
+    }
+
+    signingConfigs {
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storePassword = keystoreProperties.getProperty("uploadKeystorePassword")
+                keyAlias = keystoreProperties.getProperty("uploadKeyAlias")
+                keyPassword = keystoreProperties.getProperty("uploadKeyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("upload")
         }
     }
 
@@ -56,7 +80,11 @@ android {
 
 androidComponents {
     onVariants { variant ->
-        val abiOffset = if (variant.flavorName == "arm64") 2 else 1
+        val abiOffset = when (variant.flavorName) {
+            "arm64" -> 2
+            "play" -> 3
+            else -> 1
+        }
         variant.outputs.forEach { output ->
             output.versionCode.set(100 * 1 + abiOffset)
         }

@@ -13,8 +13,8 @@ interface MessageLogDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertOne(row: MessageLog): Long
 
-    @Query("SELECT MAX(provider_id) FROM message_log")
-    suspend fun maxProviderId(): Long?
+    @Query("SELECT EXISTS(SELECT 1 FROM message_log WHERE provider_id IS NOT NULL)")
+    suspend fun hasIngested(): Boolean
 
     @Query("SELECT seq FROM message_log WHERE status != 'pending' ORDER BY seq DESC LIMIT 1")
     suspend fun headCursor(): Long?
