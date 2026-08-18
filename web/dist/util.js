@@ -71,17 +71,17 @@ export const mergeTempThreads = (messages) => {
  */
 export const groupByThread = (messages) => Map.groupBy(messages, (message) => message.threadId);
 
-/** @param {Message[]} messages */
-export const lastOf = (messages) => messages[messages.length - 1];
+/** @param {Message[]} messages @returns {Message} the most recent one; seq order is not date order */
+export const newestOf = (messages) => messages.reduce((a, b) => (b.date >= a.date ? b : a));
 
 /** @param {Threads} threads @returns {Message[][]} newest conversation first */
 export const byRecency = (threads) =>
-  [...threads.values()].sort((a, b) => lastOf(b).date - lastOf(a).date);
+  [...threads.values()].sort((a, b) => newestOf(b).date - newestOf(a).date);
 
 /** @param {Message[]} messages @returns {string} the contact's name, falling back to their number */
 export const displayNameOf = (messages) =>
   messages.findLast((m) => m.direction === 'in' && m.displayName)?.displayName
-  ?? lastOf(messages).address;
+  ?? newestOf(messages).address;
 
 /** @param {number} timestamp @returns {string} */
 export const formatDate = (timestamp) => {

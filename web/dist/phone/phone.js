@@ -4,7 +4,7 @@
 
 import init, { Bru } from '../pkg/bru_web.js';
 import {
-  byRecency, clearAll, displayNameOf, formatDate, groupByThread, lastOf, loadMessageCache, loadOrCreateKey,
+  byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
   loadPhone, mergeTempThreads, saveMessageCache, sessionName,
 } from '../util.js';
 
@@ -151,7 +151,7 @@ function renderThreads() {
 
   threadListEl.innerHTML = '';
   renderList(threadListEl, threadRowTpl, byRecency(threads), (node, messages) => {
-    const last = lastOf(messages);
+    const last = newestOf(messages);
     const row = $$(node, '.thread-row');
     row.dataset.threadId = String(last.threadId);
     row.dataset.address = last.address;
