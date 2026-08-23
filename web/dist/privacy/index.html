@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy policy — Bru</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header>
+  <a href="/"> <h1>Bru</h1></a>
+</header>
+<main>
+  <h2>Privacy policy</h2>
+  <p>Last updated 16 August 2026.</p>
+
+  <p>Bru links your phone to a client you control, over a direct, end-to-end-encrypted connection. There is no Bru
+    account, no Bru server, and no analytics or tracking of any kind. Nothing you read or send through Bru is stored outside your phone and browser.</p>
+
+  <h3>What the app accesses on your phone</h3>
+  <ul>
+    <li><strong>SMS messages.</strong> Bru reads messages from your phone's own SMS store and sends messages on your
+      behalf. Messages are relayed only to the client you paired with.</li>
+    <li><strong>Contacts.</strong> Read only to show names in place of bare phone numbers. Contact data is never sent
+      anywhere except to your own paired client, as part of showing you who a conversation is with.</li>
+    <li><strong>Clipboard text.</strong> Text you explicitly choose to share, in either direction, when you use the
+      clipboard feature. Bru does not read your clipboard in the background.</li>
+    <li><strong>Camera.</strong> Used solely to scan the pairing QR code. No image is stored or transmitted. Pairing
+      can be completed with a typed code instead.</li>
+  </ul>
+
+  <h3>Where that data goes</h3>
+  <p>To the single client you paired with, and nowhere else. Pairing is a deliberate act: you scan a QR code or type a
+    pairing code, which establishes a cryptographic identity for that one client. Bru will not talk to any other
+    peer.</p>
+  <p>The connection is end-to-end encrypted between your phone and your client. No one except you can read it.</p>
+
+  <h3>Third parties in the connection path</h3>
+  <p>Bru uses <a href="https://github.com/n0-computer/iroh" target="_blank" rel="noopener">iroh</a> to connect the two
+    devices, which relies on public discovery and relay infrastructure operated by
+    <a href="https://n0.computer" target="_blank" rel="noopener">number&nbsp;0</a>. In practice this means:</p>
+  <ul>
+    <li>Your device's public key and current network addresses are published to that discovery service, so your two
+      devices can find each other.</li>
+    <li>When a direct connection between your phone and your client cannot be established, traffic is forwarded
+      through a relay server. Relayed traffic stays end-to-end encrypted; the relay forwards bytes it cannot
+      read.</li>
+    <li>That infrastructure can therefore observe that two devices are connected, and their IP addresses, but not the
+      content of anything you send.</li>
+  </ul>
+
+  <h3>What is stored, and where</h3>
+  <ul>
+    <li><strong>On your phone.</strong> A local database of the messages Bru has seen, your device's private key, and
+      the identity of the client you paired with. Clearing the app's data or uninstalling it removes all of this.</li>
+    <li><strong>In your client.</strong> Each client keeps its own private key, its record of the paired phone, and
+      the message history it has received in local storage on that device. Unpairing clears all of it.</li>
+  </ul>
+
+  <h3>Children</h3>
+  <p>Bru is not directed at children and collects nothing from anyone, of any age.</p>
+
+  <h3>Your data is yours</h3>
+  <p>Because we hold no data about you, there is nothing for us to hand over, correct, or delete on request. You can
+    remove everything Bru holds by clearing the app's data or uninstalling it, and by unpairing in your client.</p>
+
+  <h3>Changes</h3>
+  <p>If this policy changes, the updated version appears on this page with a new date above.</p>
+
+  <h3>Contact</h3>
+  <p>Questions about this policy: <a href="mailto:sverrejb@gmail.com">sverrejb@gmail.com</a>.</p>
+</main>
+<footer>
+  <p>Made in Norway 🇳🇴</p>
+  <ul class="footer-links">
+    <li>
+      <a href="/licenses/">Licenses</a>
+    </li>
+    <li>
+      <a href="/privacy/">Privacy</a>
+    </li>
+    <li>
+      <a href="https://github.com/sverrejb/bru" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 18l-6-6 6-6M15 6l6 6-6 6" />
+        </svg>
+        GitHub
+      </a>
+    </li>
+    <li>
+      <a href="https://bsky.app/profile/sverre.me" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026" />
+        </svg>
+        Bluesky
+      </a>
+    </li>
+    <li>
+      <a href="mailto:sverrejb@gmail.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 7l9 6 9-6" />
+        </svg>
+        Email
+      </a>
+    </li>
+  </ul>
+</footer>
+</body>
+</html>
