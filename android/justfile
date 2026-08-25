@@ -72,3 +72,10 @@ nuke:
 # Remove build outputs
 clean:
     ./gradlew clean
+
+# Collect the Gradle-signed release APKs for publishing
+dist: release
+    @mkdir -p app/build/outputs/signed
+    cp app/build/outputs/apk/armv7/release/app-armv7-release.apk app/build/outputs/signed/works.bru_101.apk
+    cp app/build/outputs/apk/arm64/release/app-arm64-release.apk app/build/outputs/signed/works.bru_102.apk
+    @ls -la app/build/outputs/signed/
