@@ -26,11 +26,25 @@ class IdentityStore(context: Context) {
             prefs.edit().putString(KEY_PEER_NAME, value).apply()
         }
 
+    var relayUrl: String?
+        get() = prefs.getString(KEY_RELAY_URL, null)
+        set(value) {
+            prefs.edit().putString(KEY_RELAY_URL, value).apply()
+        }
+
+    var relayToken: String?
+        get() = prefs.getString(KEY_RELAY_TOKEN, null)
+        set(value) {
+            prefs.edit().putString(KEY_RELAY_TOKEN, value).apply()
+        }
+
     private fun generate(): ByteArray = ByteArray(32).also { SecureRandom().nextBytes(it) }
 
     private companion object {
         const val KEY_SECRET = "iroh_secret_key"
         const val KEY_PEER = "peer_id"
         const val KEY_PEER_NAME = "peer_name"
+        const val KEY_RELAY_URL = "relay_url"
+        const val KEY_RELAY_TOKEN = "relay_token"
     }
 }

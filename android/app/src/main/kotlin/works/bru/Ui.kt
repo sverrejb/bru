@@ -1,10 +1,14 @@
 package works.bru
 
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 
 val MONO: Typeface = Typeface.create("serif-monospace", Typeface.NORMAL)
@@ -54,4 +58,50 @@ fun Context.button(
     }
     setTextColor(if (filled) BG else FG)
     setOnClickListener { onClick() }
+}
+
+fun Context.input(hint: String, value: String?) = EditText(this).apply {
+    setText(value)
+    this.hint = hint
+    textSize = 14f
+    typeface = MONO
+    setTextColor(FG)
+    setHintTextColor(MUTED)
+    setSingleLine()
+    setPadding(dp(12), dp(10), dp(12), dp(10))
+    background = GradientDrawable().apply {
+        cornerRadius = dp(8).toFloat()
+        setColor(BG)
+        setStroke(dp(2), MUTED)
+    }
+}
+
+fun Context.dialog(title: String, body: View, positiveLabel: String, onPositive: () -> Unit) {
+    val heading = text(title, 20f, FG, bold = true).apply {
+        setPadding(dp(24), dp(22), dp(24), dp(6))
+    }
+    body.setPadding(dp(24), dp(6), dp(24), dp(10))
+    val d = AlertDialog.Builder(this)
+        .setCustomTitle(heading)
+        .setView(body)
+        .setPositiveButton(positiveLabel) { _, _ -> onPositive() }
+        .setNegativeButton("Cancel", null)
+        .create()
+    d.window?.setBackgroundDrawable(
+        InsetDrawable(
+            GradientDrawable().apply {
+                cornerRadius = dp(12).toFloat()
+                setColor(BG)
+            },
+            dp(24),
+        ),
+    )
+    d.show()
+    for (which in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE)) {
+        d.getButton(which).apply {
+            typeface = MONO
+            isAllCaps = false
+            setTextColor(FG)
+        }
+    }
 }

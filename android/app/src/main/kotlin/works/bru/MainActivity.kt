@@ -2,14 +2,15 @@ package works.bru
 
 import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.InputType
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -53,10 +54,7 @@ class MainActivity : Activity() {
         scanButton = button("Pair", filled = true) { scan() }
         unpair = button("Unpair", filled = false) { confirmUnpair() }
         footer = text("", 12f, MUTED, center = true)
-        val licenses = text("Open source licenses", 12f, MUTED, center = true).apply {
-            setPadding(dp(12), dp(12), dp(12), dp(12))
-            setOnClickListener { openUrl("https://bru.works/licenses") }
-        }
+        val settings = button("Settings", filled = false, small = true) { settingsDialog() }
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -65,12 +63,12 @@ class MainActivity : Activity() {
             addView(title, lp(4))
             addView(tagline, lp(48))
             addView(status, lp(24))
-            addView(scanButton, lp(24, wrap = true))
-            addView(unpair, lp(24, wrap = true))
-            addView(permissionStatus, lp(12))
+            addView(scanButton, lp(4, wrap = true))
+            addView(unpair, lp(4, wrap = true))
             addView(permissionButton, lp(28, wrap = true))
-            addView(footer, lp(12))
-            addView(licenses, lp(wrap = true))
+            addView(footer, lp(4))
+            addView(settings, lp(16, wrap = true))
+            addView(permissionStatus, lp(wrap = true))
         }
         ViewCompat.setOnApplyWindowInsetsListener(content) { v, insets ->
             val bars = insets.getInsets(
@@ -87,16 +85,18 @@ class MainActivity : Activity() {
         requestStartupPermissions()
         consumePairLink(intent)
 
-        val app = applicationContext
-        scope.launch {
-            try {
-                IrohNet.myId(app)
-            } catch (e: Throwable) {
-                Log.e(TAG, "iroh endpoint failed", e)
-                endpointError = "${e.javaClass.simpleName}: ${e.message}"
-                render()
-            }
+        scope.launch { probeEndpoint() }
+    }
+
+    private suspend fun probeEndpoint() {
+        endpointError = try {
+            IrohNet.myId(applicationContext)
+            null
+        } catch (e: Throwable) {
+            Log.e(TAG, "iroh endpoint failed", e)
+            "${e.javaClass.simpleName}: ${e.message}"
         }
+        render()
     }
 
     override fun onResume() {
@@ -222,18 +222,61 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun settingsDialog() {
+        val store = IdentityStore(this)
+        val heading = text("Custom Iroh relay", 13f, FG, bold = true)
+        val url = input("https://relay.example.com", store.relayUrl).apply {
+            inputType = InputType.TYPE_TEXT_VARIATION_URI
+        }
+        val token = input("Access token (optional)", store.relayToken)
+        val note = text("Leave the URL empty to use default relays.", 12f, MUTED)
+        val licenses = text("Open source licenses", 12f, MUTED).apply {
+            paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
+            setPadding(0, dp(20), 0, 0)
+            setOnClickListener { openUrl("https://bru.works/licenses") }
+        }
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(heading, lp(10))
+            addView(url, lp(12))
+            addView(token, lp(12))
+            addView(note, lp(wrap = true))
+            addView(licenses, lp(wrap = true))
+        }
+        dialog("Settings", body, "Save") {
+            saveRelay(url.text.toString().trim(), token.text.toString().trim())
+        }
+    }
+
+    private fun saveRelay(url: String, token: String) {
+        val relay = url.ifEmpty { null }
+        val parsed = relay?.let { Uri.parse(it) }
+        if (relay != null && (parsed?.scheme != "https" || parsed.host.isNullOrEmpty())) {
+            Toast.makeText(this, "Relay URL must look like https://relay.example.com", Toast.LENGTH_LONG).show()
+            return
+        }
+        val store = IdentityStore(this)
+        store.relayUrl = relay
+        store.relayToken = token.ifEmpty { null }
+        scope.launch {
+            IrohNet.reset(this@MainActivity)
+            probeEndpoint()
+            Toast.makeText(
+                this@MainActivity,
+                if (relay == null) "Using default relays" else "Relay set to ${parsed?.host}",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+    }
+
     private fun confirmUnpair() {
-        AlertDialog.Builder(this)
-            .setTitle("Unpair?")
-            .setMessage("Forget this pairing? You'll need to pair again to reconnect.")
-            .setPositiveButton("Unpair") { _, _ ->
-                Pairing.clear(this)
-                wakeStatus = null
-                Toast.makeText(this, "Unpaired", Toast.LENGTH_SHORT).show()
-                render()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        val body = text("Forget this pairing? You'll need to pair again to reconnect.", 13f, MUTED)
+        dialog("Unpair?", body, "Unpair") {
+            Pairing.clear(this)
+            wakeStatus = null
+            Toast.makeText(this, "Unpaired", Toast.LENGTH_SHORT).show()
+            render()
+        }
     }
 
     private fun lp(bottomDp: Int = 0, wrap: Boolean = false) = LinearLayout.LayoutParams(
