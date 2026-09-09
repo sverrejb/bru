@@ -2,7 +2,7 @@
 /** @typedef {import('./util.js').Phone} Phone */
 
 import init, { Bru } from './pkg/bru_web.js';
-import { clearAll, loadOrCreateKey, loadPhone, savePhone, sessionName } from './util.js';
+import { clearAll, loadOrCreateKey, loadPhone, loadRelay, savePhone, saveRelay, sessionName } from './util.js';
 
 const RELAY_TIMEOUT_MS = 15_000;
 
@@ -19,7 +19,23 @@ const rejectAfter = (ms, message) =>
 
 /** @type {HTMLDialogElement} */
 const optionsDialog = $('optionsDialog');
-$('optionsBtn').addEventListener('click', () => optionsDialog.showModal());
+/** @type {HTMLInputElement} */
+const relayInput = $('relayInput');
+/** @type {HTMLInputElement} */
+const tokenInput = $('tokenInput');
+
+$('optionsBtn').addEventListener('click', () => {
+  const relay = loadRelay();
+  relayInput.value = relay.url ?? '';
+  tokenInput.value = relay.token ?? '';
+  optionsDialog.showModal();
+});
+
+optionsDialog.addEventListener('close', () => {
+  if (optionsDialog.returnValue !== 'save') return;
+  saveRelay({ url: relayInput.value, token: tokenInput.value });
+  location.reload();
+});
 
 const phone = loadPhone();
 if (phone) {
@@ -45,7 +61,8 @@ async function pair() {
     await init();
     const key = loadOrCreateKey();
     const name = sessionName(key);
-    const bru = await Bru.open(key);
+    const relay = loadRelay();
+    const bru = await Bru.open(key, relay.url, relay.token);
 
     await Promise.race([
       bru.online(),
