@@ -5,7 +5,6 @@ It links your phone to a client in your browser over a direct, end-to-end-encryp
 FEATURES
 
 * Read and send SMS. Handle conversations with a real keyboard instead of reaching for your phone.
-
 * Share a clipboard. Send text in either direction. No more retyping addresses or emailing yourself long links.
 
 HOW IT WORKS
@@ -19,9 +18,7 @@ ABOUT THE PERMISSIONS
 Bru asks for the following permissions 
 
 * SMS (read and send).  The core feature. Messages are read from the phone's own SMS store and relayed only to the client you paired with.
-
 * Contacts. Used solely to show names instead of bare phone numbers. Contact data is never sent anywhere else.
-
 * Camera. Used to scan the pairing QR code. Can be done with a pairing code instead.
 
 Bru is free software. The full source is available, and the app contains no proprietary libraries, advertising, or trackers.
