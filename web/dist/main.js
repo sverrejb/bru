@@ -17,6 +17,10 @@ const $ = (id) => /** @type {any} */ (document.getElementById(id));
 const rejectAfter = (ms, message) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms));
 
+/** @type {HTMLDialogElement} */
+const optionsDialog = $('optionsDialog');
+$('optionsBtn').addEventListener('click', () => optionsDialog.showModal());
+
 const phone = loadPhone();
 if (phone) {
   $('getStarted').hidden = true;

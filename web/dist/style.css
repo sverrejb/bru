@@ -1,5 +1,6 @@
 :root {
   --text-color: #3d3a35;
+  --bg-color: #f7f5f0;
   --qr-width: 400px;
 }
 
@@ -14,7 +15,7 @@ body {
       max-width: 800px;
       margin: 0 auto;
       padding: 1rem;
-      background: #f7f5f0;
+      background: var(--bg-color);
       color: var(--text-color);
       font-family: "Courier New", Courier, monospace;
     }
@@ -89,6 +90,21 @@ body {
       font-weight: bolder;
       text-align: justify;
       text-align-last: justify;
+    }
+
+    .pair-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin: 0.5rem 0;
+    }
+
+    .pair-status {
+      flex: 1 1 12rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
 
     body.wide {
@@ -188,10 +204,15 @@ body {
       font-weight: bolder;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #f7f5f0;
+      color: var(--bg-color);
+      background: var(--text-color);
       cursor: pointer;
-      border: 2px solid #3d3a35;
+      border: 2px solid var(--text-color);
       border-radius: 4px;
+    }
+
+    .btn:hover {
+      background: color-mix(in srgb, var(--text-color) 85%, var(--bg-color));
     }
 
     .btn:active {
@@ -392,6 +413,31 @@ body {
 
     #clearBtn:hover {
       background: #8f331f;
+    }
+
+    dialog {
+      max-width: 32rem;
+      padding: 1.5rem;
+      border: 1px solid var(--text-color);
+      border-radius: 4px;
+      background: var(--bg-color);
+    }
+
+    dialog h2 {
+      margin-top: 0;
+    }
+
+    dialog label,
+    dialog input {
+      display: block;
+    }
+
+    dialog input {
+      margin: 0.25rem 0 1rem;
+    }
+
+    dialog::backdrop {
+      background: color-mix(in srgb, var(--text-color) 45%, transparent);
     }
 
     .dialog-actions {
