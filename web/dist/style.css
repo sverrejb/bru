@@ -198,28 +198,10 @@ body {
       transform: translateY(1px);
     }
 
-    .id-row {
-      display: flex;
-      min-width: 0;
-    }
-
-    .id,
     .thread-preview {
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-    }
-
-    .id {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .card hr {
-      border: none;
-      border-top: 1px solid #3d3a35;
-      opacity: 0.3;
-      margin: 1rem 0;
     }
 
     .messages-layout {

@@ -24,14 +24,6 @@ const $$ = (node, selector) => /** @type {HTMLElement} */(node.querySelector(sel
 /** @param {Element | null} el */
 const asRow = (el) => /** @type {HTMLElement | null} */(el);
 
-/**
- * @param {HTMLElement} el
- * @param {string} id
- */
-const showId = (el, id) => {
-  el.textContent = el.title = id;
-};
-
 /** @type {HTMLElement} */
 const threadListEl = $('threadList');
 const messageListEl = $('messageList');
@@ -62,8 +54,6 @@ await init();
 const key = loadOrCreateKey();
 const bru = await Bru.open(key);
 
-showId($('clientId'), bru.id());
-showId($('phoneId'), phone.id);
 $('clientName').textContent = sessionName(key);
 $('phoneName').textContent = phone.name;
 

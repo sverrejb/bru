@@ -16,7 +16,7 @@ forwarding or fiddling with network settings.
 
 ## Installing the Android app
 
-Not on F-Droid or Google Play yet. Until then, you can build the APK yourself, using Docker.
+Available for download from the [releases page](https://github.com/sverrejb/bru/releases/latest), or you can build the APK yourself, using Docker.
 
 ```sh
 git clone https://github.com/sverrejb/bru
