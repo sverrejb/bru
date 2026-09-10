@@ -5,7 +5,7 @@
 import init, { Bru } from '../pkg/bru_web.js';
 import {
   byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
-  loadPhone, loadRelay, mergeTempThreads, saveMessageCache, sessionName,
+  loadPhone, loadRelay, mergeTempThreads, relayReady, saveMessageCache, sessionName,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
@@ -330,6 +330,13 @@ async function syncMessages() {
 
 async function reportHealth() {
   const error = $('healthError');
+  try {
+    await relayReady(bru);
+  } catch (e) {
+    error.textContent = /** @type {Error} */ (e).message;
+    error.hidden = false;
+    return;
+  }
   try {
     const { status } = JSON.parse(await bru.health(phone.id));
     if (status === 'ok') return;

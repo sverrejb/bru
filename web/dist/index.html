@@ -79,7 +79,7 @@
 
     <section id="getStarted">
       <h2>Get started</h2>
-      <p>The companion app is coming to F-Droid soon. Until then you can build the APK yourself. See the <a
+      <p>The companion app is hopefully soon. Until then you can build the APK yourself. See the <a
           href="https://github.com/sverrejb/bru#installing-the-android-app" target="_blank" rel="noopener">build
           instructions on GitHub</a>. Once it's installed, pair the phone by scanning the QR-code below.</p>
       <p id="pairError" class="error" hidden></p>
@@ -122,21 +122,24 @@
     </dialog>
 
     <dialog id="optionsDialog">
-      <form method="dialog">
-        <h2>Advanced options</h2>
+      <h2>Advanced options</h2>
+      <form method="dialog" id="relayForm">
         <fieldset>
           <legend>Custom Iroh relay</legend>
-          <p>Bru uses <a href="https://github.com/n0-computer/iroh/tree/main/iroh-relay" target="_blank" rel="noopener">n0's Iroh relays</a> by default, but if you want to you can use others, even <a href="/selfhost/">your own!</a></p>
+          <p>Bru uses <a href="https://github.com/n0-computer/iroh/blob/main/iroh-relay/README.md" target="_blank"
+              rel="noopener">n0's Iroh relays</a> by default, but if you want to you can use others, even <a
+              href="/selfhost/">your own!</a></p>
           <label for="relayInput">Relay URL, leave blank to use default</label>
           <input id="relayInput" type="url" inputmode="url" placeholder="https://relay.example.com" autocomplete="off"
             spellcheck="false">
           <label for="tokenInput">Access token, optional</label>
           <input id="tokenInput" type="text" autocomplete="off" spellcheck="false">
           <p>The companion Android app will have to be configured the same way.</p>
+          <p id="relayStatus" hidden></p>
         </fieldset>
         <div class="dialog-actions">
-          <button class="btn" value="close" formnovalidate>Close</button>
-          <button class="btn btn-accent" value="save">Save</button>
+          <button class="btn" formnovalidate>Close</button>
+          <button id="relaySaveBtn" class="btn btn-accent">Save</button>
         </div>
       </form>
     </dialog>

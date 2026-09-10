@@ -1,5 +1,5 @@
 use iroh::{
-    Endpoint, EndpointId, RelayMap, SecretKey,
+    Endpoint, EndpointId, RelayMap, SecretKey, Watcher,
     endpoint::{RelayMode, presets},
 };
 use qrcode::{QrCode, render::svg};
@@ -38,6 +38,7 @@ fn json_string(s: &str) -> String {
 #[wasm_bindgen]
 pub struct Bru {
     endpoint: Endpoint,
+    relay_url: Option<String>,
 }
 
 #[wasm_bindgen]
@@ -64,15 +65,53 @@ impl Bru {
             endpoint.id(),
             relay_url.as_deref().unwrap_or("n0")
         ));
-        Ok(Bru { endpoint })
+        Ok(Bru {
+            endpoint,
+            relay_url,
+        })
     }
 
     pub fn id(&self) -> String {
         self.endpoint.id().to_string()
     }
 
-    pub async fn online(&self) {
-        self.endpoint.online().await;
+    pub async fn online(&self) -> Result<(), JsError> {
+        let mut watcher = self.endpoint.home_relay_status();
+        loop {
+            for status in watcher.get() {
+                if status.is_connected() {
+                    return Ok(());
+                }
+                if let Some(reason) = status.auth_denied_reason() {
+                    return Err(JsError::new(&format!(
+                        "The relay at {} rejected this client: {reason}. Check the access token.",
+                        status.url()
+                    )));
+                }
+            }
+            watcher
+                .updated()
+                .await
+                .map_err(|_| JsError::new("endpoint closed"))?;
+        }
+    }
+
+    pub async fn close(&self) {
+        self.endpoint.close().await;
+    }
+
+    pub fn relay_error(&self) -> String {
+        let target = self.relay_url.as_deref().unwrap_or("a relay server");
+        match self
+            .endpoint
+            .home_relay_status()
+            .get()
+            .into_iter()
+            .find_map(|status| status.last_error().map(|err| format!("{err:#}")))
+        {
+            Some(detail) => format!("Could not reach {target}: {detail}"),
+            None => format!("Could not reach {target}. Check your connection."),
+        }
     }
 
     pub fn pair_url(&self, name: &str) -> String {
