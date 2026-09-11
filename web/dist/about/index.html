@@ -15,47 +15,53 @@
   <site-header></site-header>
   <main>
     <h2>About</h1>
-    <p>Todo</p>
+      <p>Bru, a <b>b</b>idirectional <b>r</b>emote <b>u</b>plink (also bridge in Norwegian) is a tool made for bridging
+        your phone and desktop. Made out of <s>envy</s> admiration of Continuity of the Apple ecosystem. I wanted to be
+        able to send SMS-messages from my computer, and also be able to copy-paste back and forth between my devices.
+      </p>
+      <h2>How does it work?</h2>
+      <p>Bru leverages <a href="https://www.iroh.computer/">Iroh</a> to create a connection between your
+        computer and phone.<sup>*</sup></p>
+      <p>As long as the devices are online, Iroh finds a way to connect them. Your data is encrypted and not readable by
+        anyone but you.</p>
 
-    <h2>How does it work?</h2>
-    <p>Bru leverages <a href="https://www.iroh.computer/">Iroh</a> to create a connection between your
-      computer and phone.<sup>*</sup></p>
-    <p>As long as the devices are online, Iroh finds a way to connect them. Your data is encrypted and not readable by
-      anyone but you.</p>
+      <p class="dumb-joke"><sup>*</sup>This project is not related to the <a
+          href="https://en.wikipedia.org/wiki/Irn-Bru" target="_blank" rel="noopener noreferrer">second
+          Scottish national drink.</a></p>
 
-    <p class="dumb-joke"><sup>*</sup>This project is not related to the <a href="https://en.wikipedia.org/wiki/Irn-Bru"
-        target="_blank" rel="noopener noreferrer">second
-        Scottish national drink.</a></p>
+      <h2>Open source licenses</h2>
+      <p>Bru itself is available under either the <a
+          href="https://github.com/sverrejb/bru/blob/main/LICENSE-APACHE">Apache
+          License 2.0</a> or the <a href="https://github.com/sverrejb/bru/blob/main/LICENSE-MIT">MIT license</a>, at
+        your
+        option. The source is on <a href="https://github.com/sverrejb/bru" target="_blank" rel="noopener">GitHub</a>.
+      </p>
+      <p>It is built on the following open source components.</p>
 
-    <h2>Open source licenses</h2>
-    <p>Bru itself is available under either the <a
-        href="https://github.com/sverrejb/bru/blob/main/LICENSE-APACHE">Apache
-        License 2.0</a> or the <a href="https://github.com/sverrejb/bru/blob/main/LICENSE-MIT">MIT license</a>, at your
-      option. The source is on <a href="https://github.com/sverrejb/bru" target="_blank" rel="noopener">GitHub</a>.</p>
-    <p>It is built on the following open source components.</p>
+      <h3>Android app</h3>
+      <ul>
+        <li>AndroidX (core-ktx, room, sqlite, lifecycle, startup, tracing, annotation, collection, profileinstaller,
+          versionedparcelable, interpolator) — Apache-2.0</li>
+        <li>Kotlin standard library and kotlinx-coroutines — Apache-2.0</li>
+        <li><a href="https://github.com/zxing/zxing" target="_blank" rel="noopener">ZXing</a> core — Apache-2.0</li>
+        <li><a href="https://github.com/java-native-access/jna" target="_blank" rel="noopener">JNA</a> — dual licensed
+          Apache-2.0 <em>or</em> LGPL-2.1 or later; Bru uses it under Apache-2.0</li>
+        <li><a href="https://github.com/n0-computer/iroh" target="_blank" rel="noopener">iroh</a> and iroh-ffi,
+          including
+          the bundled <code>libiroh_ffi.so</code> — MIT or Apache-2.0</li>
+      </ul>
 
-    <h3>Android app</h3>
-    <ul>
-      <li>AndroidX (core-ktx, room, sqlite, lifecycle, startup, tracing, annotation, collection, profileinstaller,
-        versionedparcelable, interpolator) — Apache-2.0</li>
-      <li>Kotlin standard library and kotlinx-coroutines — Apache-2.0</li>
-      <li><a href="https://github.com/zxing/zxing" target="_blank" rel="noopener">ZXing</a> core — Apache-2.0</li>
-      <li><a href="https://github.com/java-native-access/jna" target="_blank" rel="noopener">JNA</a> — dual licensed
-        Apache-2.0 <em>or</em> LGPL-2.1 or later; Bru uses it under Apache-2.0</li>
-      <li><a href="https://github.com/n0-computer/iroh" target="_blank" rel="noopener">iroh</a> and iroh-ffi, including
-        the bundled <code>libiroh_ffi.so</code> — MIT or Apache-2.0</li>
-    </ul>
+      <h3>Web client</h3>
+      <ul>
+        <li><a href="https://github.com/n0-computer/iroh" target="_blank" rel="noopener">iroh</a> — MIT or Apache-2.0
+        </li>
+        <li>wasm-bindgen and wasm-bindgen-futures — MIT or Apache-2.0</li>
+        <li>qrcode — MIT or Apache-2.0</li>
+      </ul>
 
-    <h3>Web client</h3>
-    <ul>
-      <li><a href="https://github.com/n0-computer/iroh" target="_blank" rel="noopener">iroh</a> — MIT or Apache-2.0</li>
-      <li>wasm-bindgen and wasm-bindgen-futures — MIT or Apache-2.0</li>
-      <li>qrcode — MIT or Apache-2.0</li>
-    </ul>
-
-    <p><code>libiroh_ffi.so</code> is a prebuilt native library that statically links its own Rust dependency tree, so
-      the components above are not the complete list for it. See the <a href="https://github.com/n0-computer/iroh"
-        target="_blank" rel="noopener">iroh repository</a> for those dependencies and their licenses.</p>
+      <p><code>libiroh_ffi.so</code> is a prebuilt native library that statically links its own Rust dependency tree, so
+        the components above are not the complete list for it. See the <a href="https://github.com/n0-computer/iroh"
+          target="_blank" rel="noopener">iroh repository</a> for those dependencies and their licenses.</p>
   </main>
   <site-footer></site-footer>
 </body>
