@@ -243,17 +243,20 @@ class MainActivity : Activity() {
         }
         val token = input("Access token (optional)", store.relayToken)
         val note = text("Leave the URL empty to use default relays.", 12f, MUTED)
-        val licenses = text("Open source licenses", 12f, MUTED).apply {
+        fun link(label: String, url: String, topDp: Int) = text(label, 12f, MUTED).apply {
             paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
-            setPadding(0, dp(20), 0, 0)
-            setOnClickListener { openUrl("https://bru.works/licenses") }
+            setPadding(0, dp(topDp), 0, 0)
+            setOnClickListener { openUrl(url) }
         }
+        val selfhost = link("Self-host Bru", "https://bru.works/selfhost", 20)
+        val licenses = link("Open source licenses", "https://bru.works/licenses", 8)
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(heading, lp(10))
             addView(url, lp(12))
             addView(token, lp(12))
             addView(note, lp(wrap = true))
+            addView(selfhost, lp(wrap = true))
             addView(licenses, lp(wrap = true))
         }
         dialog("Settings", body, "Save") {
