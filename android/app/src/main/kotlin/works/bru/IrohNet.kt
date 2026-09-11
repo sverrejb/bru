@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 object IrohNet {
     val ALPN = "bru/1".toByteArray()
@@ -27,6 +28,7 @@ object IrohNet {
 
     private val MAX_FRAME: UInt = 4u * 1024u * 1024u
     private val QUIC_PORT: UShort = 7842u
+    private const val RELAY_TIMEOUT_MS = 15_000L
 
     private val initLock = Mutex()
     @Volatile private var endpoint: Endpoint? = null
@@ -76,7 +78,10 @@ object IrohNet {
         resume?.let { startServing(app, it) }
     }
 
-    suspend fun myId(context: Context): String = endpoint(context).id().toString()
+    suspend fun awaitRelay(context: Context): Boolean {
+        val ep = endpoint(context)
+        return withTimeoutOrNull(RELAY_TIMEOUT_MS) { ep.online() } != null
+    }
 
     fun startServing(context: Context, dispatch: suspend (String) -> String) {
         if (serveJob?.isActive == true) return

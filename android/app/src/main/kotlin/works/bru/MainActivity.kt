@@ -35,6 +35,7 @@ class MainActivity : Activity() {
     private lateinit var scanButton: View
     private lateinit var unpair: View
     private var endpointError: String? = null
+    private var relayError: String? = null
     private var wakeStatus: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,12 +90,24 @@ class MainActivity : Activity() {
     }
 
     private suspend fun probeEndpoint() {
-        endpointError = try {
-            IrohNet.myId(applicationContext)
-            null
+        endpointError = null
+        relayError = null
+        render()
+        try {
+            if (!IrohNet.awaitRelay(applicationContext)) {
+                val store = IdentityStore(this)
+                relayError = store.relayUrl?.let {
+                    val urlAndToken = if (store.relayToken == null) {
+                        "the URL, or whether the relay needs a token"
+                    } else {
+                        "the URL and token"
+                    }
+                    "Could not reach ${Uri.parse(it).host}. Check $urlAndToken."
+                } ?: "Could not reach a relay server. Check your connection."
+            }
         } catch (e: Throwable) {
             Log.e(TAG, "iroh endpoint failed", e)
-            "${e.javaClass.simpleName}: ${e.message}"
+            endpointError = "${e.javaClass.simpleName}: ${e.message}"
         }
         render()
     }
@@ -125,7 +138,7 @@ class MainActivity : Activity() {
 
         scanButton.visibility = if (paired) View.GONE else View.VISIBLE
         unpair.visibility = if (paired) View.VISIBLE else View.GONE
-        footer.text = endpointError ?: wakeStatus ?: if (paired) {
+        footer.text = endpointError ?: relayError ?: wakeStatus ?: if (paired) {
             ""
         } else {
             "Open https://bru.works on your computer, then tap Pair to scan the QR code."
@@ -260,12 +273,12 @@ class MainActivity : Activity() {
         store.relayToken = token.ifEmpty { null }
         scope.launch {
             IrohNet.reset(this@MainActivity)
-            probeEndpoint()
             Toast.makeText(
                 this@MainActivity,
                 if (relay == null) "Using default relays" else "Relay set to ${parsed?.host}",
                 Toast.LENGTH_SHORT,
             ).show()
+            probeEndpoint()
         }
     }
 
