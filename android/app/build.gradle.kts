@@ -20,8 +20,8 @@ android {
         applicationId = "works.bru"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     flavorDimensions += "abi"
@@ -91,7 +91,7 @@ androidComponents {
             else -> 1
         }
         variant.outputs.forEach { output ->
-            output.versionCode.set(100 * 1 + abiOffset)
+            output.versionCode.set(100 * (output.versionCode.get() ?: 1) + abiOffset)
         }
     }
 }

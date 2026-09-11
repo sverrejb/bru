@@ -1,0 +1,5 @@
+Bring your own relay.
+
+* Set a custom iroh relay server, with an optional access token, under Settings
+* The app now says so when it cannot reach a relay, and names the host if you set your own
+* New app icon, with dark and themed variants
