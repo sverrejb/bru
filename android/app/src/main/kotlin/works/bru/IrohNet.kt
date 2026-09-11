@@ -8,6 +8,9 @@ import computer.iroh.EndpointAddr
 import computer.iroh.EndpointId
 import computer.iroh.EndpointOptions
 import computer.iroh.IrohAndroid
+import computer.iroh.RelayConfig
+import computer.iroh.RelayMap
+import computer.iroh.RelayMode
 import computer.iroh.presetN0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,18 +20,22 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 object IrohNet {
     val ALPN = "bru/1".toByteArray()
     private const val TAG = "bru"
 
     private val MAX_FRAME: UInt = 4u * 1024u * 1024u
+    private val QUIC_PORT: UShort = 7842u
+    private const val RELAY_TIMEOUT_MS = 15_000L
 
     private val initLock = Mutex()
     @Volatile private var endpoint: Endpoint? = null
 
     private val serveScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     @Volatile private var serveJob: Job? = null
+    @Volatile private var dispatcher: (suspend (String) -> String)? = null
 
     suspend fun endpoint(context: Context): Endpoint {
         endpoint?.let { return it }
@@ -39,22 +46,47 @@ object IrohNet {
 
     private suspend fun build(context: Context): Endpoint = withContext(Dispatchers.IO) {
         IrohAndroid.installAndroidContext(context.applicationContext)
+        val store = IdentityStore(context)
         val ep = Endpoint.bind(
             EndpointOptions(
                 preset = presetN0(),
-                secretKey = IdentityStore(context).secretKey,
+                secretKey = store.secretKey,
                 alpns = listOf(ALPN),
+                relayMode = store.relayUrl?.let { customRelay(it, store.relayToken) },
             ),
         )
-        Log.i(TAG, "iroh endpoint up: ${ep.id()}")
+        Log.i(TAG, "iroh endpoint up: ${ep.id()} relay=${store.relayUrl ?: "n0"}")
         ep
     }
 
-    suspend fun myId(context: Context): String = endpoint(context).id().toString()
+    private fun customRelay(url: String, token: String?) = RelayMode.custom(
+        RelayMap.empty().apply {
+            insert(RelayConfig(url = url, quicPort = QUIC_PORT, authToken = token))
+        },
+    )
+
+    suspend fun reset(context: Context) {
+        val app = context.applicationContext
+        val resume = dispatcher
+        stopServing()
+        withContext(Dispatchers.IO) {
+            initLock.withLock {
+                endpoint?.close()
+                endpoint = null
+            }
+        }
+        resume?.let { startServing(app, it) }
+    }
+
+    suspend fun awaitRelay(context: Context): Boolean {
+        val ep = endpoint(context)
+        return withTimeoutOrNull(RELAY_TIMEOUT_MS) { ep.online() } != null
+    }
 
     fun startServing(context: Context, dispatch: suspend (String) -> String) {
         if (serveJob?.isActive == true) return
         val app = context.applicationContext
+        dispatcher = dispatch
         serveJob = serveScope.launch {
             try {
                 val ep = endpoint(app)
@@ -77,6 +109,7 @@ object IrohNet {
 
     fun stopServing() {
         serveJob?.cancel()
+        dispatcher = null
     }
 
     private suspend fun handle(context: Context, conn: Connection, dispatch: suspend (String) -> String) {

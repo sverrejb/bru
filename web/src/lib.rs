@@ -1,4 +1,7 @@
-use iroh::{Endpoint, EndpointId, SecretKey, endpoint::presets};
+use iroh::{
+    Endpoint, EndpointId, RelayMap, SecretKey, Watcher,
+    endpoint::{RelayMode, presets},
+};
 use qrcode::{QrCode, render::svg};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
@@ -13,10 +16,7 @@ extern "C" {
     fn log(s: &str);
 }
 
-// Rust's `{:?}` escapes non-printable Unicode (e.g. emoji variation selectors, ZWJ) as
-// `\u{XXXX}`, which isn't valid JSON (JSON needs exactly 4 hex digits, no braces) and breaks
-// the phone's JSON parser on message bodies containing them. This escapes only what JSON
-// requires and leaves everything else as raw UTF-8, which JSON strings allow unescaped.
+// This escapes only what JSON requires and leaves everything else as raw UTF-8, which JSON strings allow unescaped.
 fn json_string(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 2);
     out.push('"');
@@ -38,27 +38,80 @@ fn json_string(s: &str) -> String {
 #[wasm_bindgen]
 pub struct Bru {
     endpoint: Endpoint,
+    relay_url: Option<String>,
 }
 
 #[wasm_bindgen]
 impl Bru {
-    pub async fn open(secret_key: &[u8]) -> Result<Bru, JsError> {
+    pub async fn open(
+        secret_key: &[u8],
+        relay_url: Option<String>,
+        relay_token: Option<String>,
+    ) -> Result<Bru, JsError> {
         let key: [u8; 32] = secret_key.try_into()?;
-        let endpoint = Endpoint::builder(presets::N0)
+        let mut builder = Endpoint::builder(presets::N0)
             .secret_key(SecretKey::from_bytes(&key))
-            .alpns(vec![ALPN.to_vec()])
-            .bind()
-            .await?;
-        log(&format!("[bru] endpoint bound, id={}", endpoint.id()));
-        Ok(Bru { endpoint })
+            .alpns(vec![ALPN.to_vec()]);
+        if let Some(url) = &relay_url {
+            let map = RelayMap::try_from_iter([url.as_str()])?;
+            builder = builder.relay_mode(RelayMode::Custom(match relay_token {
+                Some(token) => map.with_auth_token(token),
+                None => map,
+            }));
+        }
+        let endpoint = builder.bind().await?;
+        log(&format!(
+            "[bru] endpoint bound, id={} relay={}",
+            endpoint.id(),
+            relay_url.as_deref().unwrap_or("n0")
+        ));
+        Ok(Bru {
+            endpoint,
+            relay_url,
+        })
     }
 
     pub fn id(&self) -> String {
         self.endpoint.id().to_string()
     }
 
-    pub async fn online(&self) {
-        self.endpoint.online().await;
+    pub async fn online(&self) -> Result<(), JsError> {
+        let mut watcher = self.endpoint.home_relay_status();
+        loop {
+            for status in watcher.get() {
+                if status.is_connected() {
+                    return Ok(());
+                }
+                if let Some(reason) = status.auth_denied_reason() {
+                    return Err(JsError::new(&format!(
+                        "The relay at {} rejected this client: {reason}. Check the access token.",
+                        status.url()
+                    )));
+                }
+            }
+            watcher
+                .updated()
+                .await
+                .map_err(|_| JsError::new("endpoint closed"))?;
+        }
+    }
+
+    pub async fn close(&self) {
+        self.endpoint.close().await;
+    }
+
+    pub fn relay_error(&self) -> String {
+        let target = self.relay_url.as_deref().unwrap_or("a relay server");
+        match self
+            .endpoint
+            .home_relay_status()
+            .get()
+            .into_iter()
+            .find_map(|status| status.last_error().map(|err| format!("{err:#}")))
+        {
+            Some(detail) => format!("Could not reach {target}: {detail}"),
+            None => format!("Could not reach {target}. Check your connection."),
+        }
     }
 
     pub fn pair_url(&self, name: &str) -> String {

@@ -108,6 +108,38 @@ export const loadOrCreateKey = () => {
   return fresh;
 };
 
+/** @typedef {{ url: string | null, token: string | null }} Relay */
+
+/** @returns {Relay} the custom relay, null is n0's default relays */
+export const loadRelay = () => ({
+  url: localStorage.getItem('bru.relayUrl'),
+  token: localStorage.getItem('bru.relayToken'),
+});
+
+/** @param {string} key @param {string | null} value */
+const setOrRemove = (key, value) => {
+  if (value) localStorage.setItem(key, value);
+  else localStorage.removeItem(key);
+};
+
+/** @param {Relay} relay */
+export const saveRelay = ({ url, token }) => {
+  setOrRemove('bru.relayUrl', url);
+  setOrRemove('bru.relayToken', token);
+};
+
+const RELAY_TIMEOUT_MS = 15_000;
+
+/** @param {import('./pkg/bru_web.js').Bru} bru */
+export const relayReady = (bru) => {
+  /** @type {number} */
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(bru.relay_error())), RELAY_TIMEOUT_MS);
+  });
+  return Promise.race([bru.online(), timeout]).finally(() => clearTimeout(timer));
+};
+
 /** @returns {Phone | null} the paired phone, if any */
 export const loadPhone = () => {
   const id = localStorage.getItem('bru.phoneKey');
