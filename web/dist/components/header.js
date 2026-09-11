@@ -4,7 +4,7 @@ import { loadPhone } from '../util.js';
 
 const LINKS = [
   ['/selfhost/', 'Self host'],
-  ['/licenses/', 'About'],
+  ['/about/', 'About'],
   ['/privacy/', 'Privacy'],
 ];
 
