@@ -1,3 +1,8 @@
 [build]
   base = "web"
   publish = "dist"
+
+[[redirects]]
+from = "/licenses"
+to = "/about"
+status = 301

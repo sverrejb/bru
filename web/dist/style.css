@@ -31,14 +31,39 @@ body {
       font-weight: bolder;
     }
 
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      margin-bottom: 0;
+    }
+
     header a {
       color: inherit;
       text-decoration: none;
     }
 
+    .nav-links {
+      text-decoration: underline;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .nav-links a:hover {
+      color: #a8402a;
+    }
+    
     .subtitle {
       font-size: 1.5rem;
       font-weight: bold;
+      flex-basis: 100%;
     }
 
     p {
