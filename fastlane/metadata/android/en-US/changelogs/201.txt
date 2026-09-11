@@ -1,5 +1,6 @@
 Bring your own relay.
 
 * Set a custom iroh relay server, with an optional access token, under Settings
+* With a custom relay set, no default iroh servers are used at all, not even for discovery
 * The app now says so when it cannot reach a relay, and names the host if you set your own
 * New app icon, with dark and themed variants

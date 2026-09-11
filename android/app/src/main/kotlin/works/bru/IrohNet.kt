@@ -11,6 +11,7 @@ import computer.iroh.IrohAndroid
 import computer.iroh.RelayConfig
 import computer.iroh.RelayMap
 import computer.iroh.RelayMode
+import computer.iroh.presetMinimal
 import computer.iroh.presetN0
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +50,7 @@ object IrohNet {
         val store = IdentityStore(context)
         val ep = Endpoint.bind(
             EndpointOptions(
-                preset = presetN0(),
+                preset = if (store.relayUrl != null) presetMinimal() else presetN0(),
                 secretKey = store.secretKey,
                 alpns = listOf(ALPN),
                 relayMode = store.relayUrl?.let { customRelay(it, store.relayToken) },
@@ -130,13 +131,14 @@ object IrohNet {
     }
 
     suspend fun dialPeer(context: Context, reqJson: String): Boolean {
-        val peerId = IdentityStore(context).peerId ?: run {
+        val store = IdentityStore(context)
+        val peerId = store.peerId ?: run {
             Log.w(TAG, "no peer paired — cannot push")
             return false
         }
         return try {
             val ep = endpoint(context)
-            val addr = EndpointAddr(EndpointId.fromString(peerId), null, emptyList())
+            val addr = EndpointAddr(EndpointId.fromString(peerId), store.relayUrl, emptyList())
             val conn = ep.connect(addr, ALPN)
             val bi = conn.openBi()
             val send = bi.send()

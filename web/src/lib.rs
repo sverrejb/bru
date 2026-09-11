@@ -1,5 +1,5 @@
 use iroh::{
-    Endpoint, EndpointId, RelayMap, SecretKey, Watcher,
+    Endpoint, EndpointAddr, EndpointId, RelayMap, RelayUrl, SecretKey, Watcher,
     endpoint::{RelayMode, presets},
 };
 use qrcode::{QrCode, render::svg};
@@ -49,9 +49,12 @@ impl Bru {
         relay_token: Option<String>,
     ) -> Result<Bru, JsError> {
         let key: [u8; 32] = secret_key.try_into()?;
-        let mut builder = Endpoint::builder(presets::N0)
-            .secret_key(SecretKey::from_bytes(&key))
-            .alpns(vec![ALPN.to_vec()]);
+        let mut builder = match &relay_url {
+            Some(_) => Endpoint::builder(presets::Minimal),
+            None => Endpoint::builder(presets::N0),
+        }
+        .secret_key(SecretKey::from_bytes(&key))
+        .alpns(vec![ALPN.to_vec()]);
         if let Some(url) = &relay_url {
             let map = RelayMap::try_from_iter([url.as_str()])?;
             builder = builder.relay_mode(RelayMode::Custom(match relay_token {
@@ -188,7 +191,11 @@ impl Bru {
             String::from_utf8_lossy(req)
         ));
         let id = EndpointId::from_str(phone_id)?;
-        let conn = self.endpoint.connect(id, ALPN).await?;
+        let mut addr = EndpointAddr::new(id);
+        if let Some(url) = &self.relay_url {
+            addr = addr.with_relay_url(RelayUrl::from_str(url)?);
+        }
+        let conn = self.endpoint.connect(addr, ALPN).await?;
 
         let (mut send, mut recv) = conn.open_bi().await?;
         send.write_all(req).await?;
