@@ -36,10 +36,10 @@ launch:
 release:
     ./gradlew :app:assembleRelease
 
-# Build the release App Bundle (.aab)
-bundle:
-    ./gradlew :app:bundleRelease
-    @du -h app/build/outputs/bundle/*/*.aab
+# Build the signed App Bundle (.aab) for Play upload
+playBundle:
+    ./gradlew :app:bundlePlayRelease
+    @du -h app/build/outputs/bundle/playRelease/*.aab
 
 # Build release and print the APK size, one per ABI
 size: release

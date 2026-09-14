@@ -127,7 +127,7 @@ class BruService : Service() {
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         } else {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            0
         }
         ServiceCompat.startForeground(this, NOTIF_ID, notification, type)
     }
