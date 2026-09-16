@@ -1,0 +1,4 @@
+Fix bug in phone number handling.
+
+* Phone numbers now default to your SIM's country code instead of a fixed +47
+* Override still works: prefix a number with 00 or + to use a different country
