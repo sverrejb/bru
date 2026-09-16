@@ -1,7 +1,0 @@
-First release.
-
-* Pair with a client by scanning a QR code
-* Read and send SMS from the paired client
-* Share clipboard text in both directions
-* Set your own iroh relay server, with an optional access token, under Settings
-* No account and no Bru server — messages go straight to the client you paired with

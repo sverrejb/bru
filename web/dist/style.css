@@ -267,6 +267,7 @@ body {
     }
 
     .thread-list {
+      list-style: none;
       margin: 0;
       padding: 0;
       min-width: 0;
@@ -293,16 +294,24 @@ body {
     }
 
     .thread-row {
+      display: block;
+      width: 100%;
+      appearance: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      background: none;
       cursor: pointer;
       padding: 0.5rem 0;
+      border: none;
       border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
     }
 
-    .thread-row:last-child {
+    .thread-list li:last-child .thread-row {
       border-bottom: none;
     }
 
-    .thread-row.selected {
+    .thread-row[aria-current] {
       background: color-mix(in srgb, var(--text-color) 8%, transparent);
     }
 

@@ -73,7 +73,10 @@ smsBody.onkeydown = (e) => {
 };
 threadListEl.onclick = (e) => {
   const row = asRow(/** @type {Element} */(e.target).closest('.thread-row'));
-  if (row) selectThread(row);
+  if (row) {
+    selectThread(row);
+    smsBody.focus();
+  }
 };
 
 reportHealth();
@@ -161,8 +164,8 @@ function selectThread(row) {
   if (previous) {
     drafts.set(String(previous.dataset.address), smsBody.value);
   }
-  previous?.classList.remove('selected');
-  row.classList.add('selected');
+  previous?.removeAttribute('aria-current');
+  row.setAttribute('aria-current', 'true');
 
   const address = String(row.dataset.address);
   const messages = messagesOf(row);
@@ -345,7 +348,7 @@ async function clearData() {
 }
 
 function selectedRow() {
-  return asRow(threadListEl.querySelector('.thread-row.selected'));
+  return asRow(threadListEl.querySelector('.thread-row[aria-current]'));
 }
 
 /** @param {HTMLElement} row */
