@@ -77,7 +77,7 @@ private suspend fun send(
     body: String,
     clientId: String,
 ): String {
-    val target = PhoneNumbers.normalizeE164(to) ?: to
+    val target = PhoneNumbers.normalizeE164(to, repo.countryIso) ?: to
     val outcome = repo.getOrCreatePending(clientId, target, body)
     if (!outcome.isNew) return outcome.status
     return try {

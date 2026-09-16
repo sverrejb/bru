@@ -1,6 +1,6 @@
 package works.bru
 
-import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
 import android.provider.Telephony
@@ -21,9 +21,12 @@ internal fun tempThreadId(address: String): Long =
 
 class SmsRepository(
     private val db: AppDatabase,
-    private val resolver: ContentResolver,
+    private val context: Context,
 ) {
     private val dao = db.messages()
+    private val resolver get() = context.contentResolver
+
+    val countryIso: String? get() = PhoneNumbers.simCountryIso(context)
 
     suspend fun ingestNew(): Int = withContext(Dispatchers.IO) {
         val provider = query(backfill = !dao.hasIngested())
@@ -124,7 +127,7 @@ class SmsRepository(
                 out += MessageLog(
                     providerId = c.getLong(iId),
                     threadId = threadId,
-                    address = PhoneNumbers.normalizeE164(rawAddress) ?: "",
+                    address = PhoneNumbers.normalizeE164(rawAddress, countryIso) ?: "",
                     displayName = contactName(rawAddress, nameCache),
                     body = c.getString(iBody) ?: "",
                     date = c.getLong(iDate),

@@ -55,7 +55,7 @@ class BruService : Service() {
         val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "bru.db")
             .addMigrations(AppDatabase.MIGRATION_1_2)
             .build()
-        repo = SmsRepository(db, contentResolver)
+        repo = SmsRepository(db, applicationContext)
         startForegroundNotice()
         val app = applicationContext
         sender = SmsSender(app)
