@@ -7,7 +7,6 @@ adb      := "$HOME/Library/Android/sdk/platform-tools/adb"
 pkg      := "works.bru"
 activity := pkg + "/.MainActivity"
 abi      := "Arm64"
-vc       := "2"
 
 # List available recipes
 default:
@@ -77,6 +76,6 @@ clean:
 # Collect the Gradle-signed release APKs for publishing
 dist: release
     @mkdir -p app/build/outputs/signed
-    cp app/build/outputs/apk/armv7/release/app-armv7-release.apk app/build/outputs/signed/works.bru_{{vc}}01.apk
-    cp app/build/outputs/apk/arm64/release/app-arm64-release.apk app/build/outputs/signed/works.bru_{{vc}}02.apk
+    cp app/build/outputs/apk/armv7/release/app-armv7-release.apk app/build/outputs/signed/works.bru-armeabi-v7a.apk
+    cp app/build/outputs/apk/arm64/release/app-arm64-release.apk app/build/outputs/signed/works.bru-arm64-v8a.apk
     @ls -la app/build/outputs/signed/
