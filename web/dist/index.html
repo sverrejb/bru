@@ -79,7 +79,7 @@
       <p>The companion app is available in the <a  target="_blank" rel="noopener" href="https://apt.izzysoft.de/fdroid/index/apk/works.bru">IzzyOnDroid app repo</a>, as a downloadable .apk-file from <a target="_blank" rel="noopener" href="https://github.com/sverrejb/bru/releases" >github</a>, or you
         can <a href="https://github.com/sverrejb/bru#installing-the-android-app" target="_blank" rel="noopener">build the APK yourself</a>. Once it's installed, pair the
         phone by scanning the QR-code below.</p>
-      <p id="pairError" class="error" hidden></p>
+      <p id="pairError" class="error" role="alert" hidden></p>
       <div id="qr"></div>
       <span id="sessionName"></span>
       <div class="pair-meta">
@@ -132,7 +132,7 @@
           <label for="tokenInput">Access token, optional</label>
           <input id="tokenInput" type="text" autocomplete="off" spellcheck="false">
           <p>The companion Android app will have to be configured the same way.</p>
-          <p id="relayStatus" hidden></p>
+          <p id="relayStatus" aria-live="polite" hidden></p>
         </fieldset>
         <div class="dialog-actions">
           <button class="btn" formnovalidate>Close</button>
