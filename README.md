@@ -6,6 +6,8 @@ Sync your phone and computer over an end-to-end-encrypted
 [iroh](https://iroh.computer) link. No cloud account, no external databases, no port
 forwarding or fiddling with network settings.
 
+The web client is at [https://bru.works](https://bru.works), but you can also make your own! Maybe a CLI, TUI, or a desktop app?
+
 * **Read and send your phone's SMS**. Conveniently from a desktop, no need to pull out your phone. 
 
 * **Send and recieve text to clipboard.** No more typing things manually or struggeling with long URL's you rather browse on your computer.
