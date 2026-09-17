@@ -6,8 +6,11 @@ FEATURES
 
 * Read and send SMS. Handle conversations with a real keyboard instead of reaching for your phone.
 * Share a clipboard. Send text in either direction. No more retyping addresses or emailing yourself long links.
+* 100% self hostable.
 
 HOW IT WORKS
+
+Install the app, and visit https://bru.works. 
 
 Pairing is a one-time QR code scan. After that your phone and your client find each other directly using iroh, which establishes an authenticated, end-to-end-encrypted connection between the two devices.
 
@@ -21,4 +24,9 @@ Bru asks for the following permissions
 * Contacts. Used solely to show names instead of bare phone numbers. Contact data is never sent anywhere else.
 * Camera. Used to scan the pairing QR code. Can be done with a pairing code instead.
 
-Bru is free software. The full source is available, and the app contains no proprietary libraries, advertising, or trackers.
+PHILOSPHY
+
+* Bru is free software, both as in beer and as in speech. 
+* The app contains no proprietary libraries, advertising, or trackers.
+* The whole stack can be self-hosted.
+* Everything is open, you can write your own client.
