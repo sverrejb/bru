@@ -3,6 +3,7 @@
 /** @typedef {import('../util.js').Threads} Threads */
 
 import init, { Bru } from '../pkg/bru_web.js';
+import { initEmojiPalette } from './emoji.js';
 import {
   byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
   loadPhone, loadRelay, mergeTempThreads, relayReady, saveMessageCache, sessionName,
@@ -67,6 +68,8 @@ sendClipboardBtn.onclick = sendClipboard;
 notifyToggle.checked = Notification.permission === 'granted' && localStorage.getItem('bru.notify') === 'on';
 notifyToggle.onchange = askNotificationPermission;
 
+
+initEmojiPalette(smsBody);
 
 smsBody.onkeydown = (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
@@ -169,7 +172,7 @@ function selectThread(row) {
 
   const address = String(row.dataset.address);
   const messages = messagesOf(row);
-  smsBody.placeholder = `Send SMS to ${messages.length ? displayNameOf(messages) : address}`;
+  smsBody.placeholder = smsBody.ariaLabel = `Send SMS to ${messages.length ? displayNameOf(messages) : address}`;
   smsBody.value = drafts.get(address) ?? '';
   renderMessages(messages);
 }

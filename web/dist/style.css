@@ -356,6 +356,7 @@ body {
     }
 
     .sendUI {
+      position: relative;
       margin-bottom: 0;
       display: flex;
       align-items: flex-end;
@@ -384,6 +385,43 @@ body {
 
     #smsBody:focus {
       border-bottom-color: var(--text-color);
+    }
+
+    .emoji-palette {
+      position: absolute;
+      left: 0;
+      bottom: calc(100% + 0.5rem);
+      max-width: 100%;
+      margin: 0;
+      padding: 0.25rem;
+      list-style: none;
+    }
+
+    .emoji-palette li {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      padding: 0.25rem 0.5rem;
+      border-radius: 2px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .emoji-palette li[aria-selected="true"] {
+      color: var(--bg-color);
+      background: var(--text-color);
+    }
+
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute;
+      clip-path: inset(50%);
+      overflow: hidden;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      border: 0;
+      white-space: nowrap;
     }
 
     #clipboardText {
