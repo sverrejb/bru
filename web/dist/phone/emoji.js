@@ -7,7 +7,7 @@ const loadEmojis = () => loading ??= fetch(new URL('./emoji.json', import.meta.u
   .then((r) => r.json())
   .catch(() => ({}));
 
-const colonEmojiRegex = /(?:^|\s):([a-z0-9_+-]{2,}):?$/;
+const colonEmojiRegex = /(?<=^|\s):([a-z0-9_+-]{2,}):?$/;
 
 /**
  * @param {Record<string, string>} emoji
@@ -59,20 +59,22 @@ export function initEmojiPalette(input) {
     input.setAttribute('aria-activedescendant', option.id);
   };
 
-  /** @param {Element | null} option */
-  const selectEmoji = (option) => {
+  /** @param {string | null | undefined} char */
+  const insertEmoji = (char) => {
     const match = colonEmojiRegex.exec(input.value.slice(0, input.selectionStart));
-    if (!match || !(option instanceof HTMLElement)) return;
-    const head = input.value.slice(0, input.selectionStart - match[1].length - 1) + option.dataset.char;
+    if (!match || !char) return;
+    const head = input.value.slice(0, input.selectionStart - match[0].length) + char;
     input.value = head + input.value.slice(input.selectionStart);
     input.setSelectionRange(head.length, head.length);
     close();
   };
 
   input.addEventListener('input', async () => {
+    const emojis = await loadEmojis();
     const match = colonEmojiRegex.exec(input.value.slice(0, input.selectionStart));
     if (!match) return close();
-    list.replaceChildren(...search(await loadEmojis(), match[1]).map(([name, char], index) => {
+    if (match[0].endsWith(':') && emojis[match[1]]) return insertEmoji(emojis[match[1]]);
+    list.replaceChildren(...search(emojis, match[1]).map(([name, char], index) => {
       const option = document.createElement('li');
       option.id = `emojiOption${index}`;
       option.dataset.char = char;
@@ -95,7 +97,7 @@ export function initEmojiPalette(input) {
     }
     if (e.key === 'Enter' || e.key === 'Tab') {
       e.preventDefault();
-      return selectEmoji(active);
+      return insertEmoji(active.getAttribute('data-char'));
     }
     const next = e.key === 'ArrowDown' ? active.nextElementSibling ?? list.firstElementChild
       : e.key === 'ArrowUp' ? active.previousElementSibling ?? list.lastElementChild : null;
@@ -106,7 +108,7 @@ export function initEmojiPalette(input) {
 
   list.onmousedown = (e) => {
     e.preventDefault();
-    selectEmoji(e.target instanceof Element ? e.target.closest('li') : null);
+    if (e.target instanceof Element) insertEmoji(e.target.closest('li')?.getAttribute('data-char'));
   };
 
   input.addEventListener('blur', close);
