@@ -83,7 +83,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Maintains the end-to-end-encrypted peer-to-peer link that serves this phone to the single client the user paired with, so messages relay in both directions while the app is not open. No standard type applies: the link is not media, data sync to a server, or a Bluetooth or USB connected device." />
+                android:value="Maintains the end-to-end-encrypted link that serves this phone to the single client the user paired with, so messages relay in both directions while the app is not open. No standard type applies: the link is not media, data sync to a server, or a Bluetooth or USB connected device." />
         </service>
 
         <receiver
