@@ -1,4 +1,5 @@
 * PIN code with encryption? Or encrypted indexeddb?
+* Beef up security with a wrapping key
 * Auto detect copypasted URLS and propmpt to open
 * Image support copy/paste share
 * Favicon/title "nubbin" / red dot on new messages
@@ -8,5 +9,4 @@
 * Make phone ring?
 * Dark mode
 * GIF-support
-* :emoji-palette
-* PWA support
+* PWA support?
