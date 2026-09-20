@@ -6,7 +6,7 @@ import init, { Bru } from '../pkg/bru_web.js';
 import { initEmojiPalette } from './emoji.js';
 import {
   byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
-  loadPhone, loadRelay, mergeTempThreads, relayReady, saveMessageCache, sessionName,
+  loadPhone, loadRelay, mergeTempThreads, relayReady, saveMessageCache, sessionName, withTimeout,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
@@ -73,6 +73,10 @@ initEmojiPalette(smsBody);
 
 smsBody.onkeydown = (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendMessage();
+};
+
+clipboardText.onkeydown = (e) => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendClipboard();
 };
 threadListEl.onclick = (e) => {
   const row = asRow(/** @type {Element} */(e.target).closest('.thread-row'));
@@ -237,7 +241,7 @@ async function sendClipboard() {
     clipboardStatus.hidden = true;
   } catch (e) {
     console.error('[bru] clipboard send failed', e);
-    clipboardStatus.textContent = 'Could not reach phone.';
+    clipboardStatus.textContent = e instanceof Error ? e.message : 'Could not reach phone.';
     clipboardStatus.hidden = false;
   }
 }
@@ -246,7 +250,7 @@ async function sendClipboard() {
  * @param {Promise<string>} promise
  */
 async function callBru(promise) {
-  const response = JSON.parse(await promise);
+  const response = JSON.parse(await withTimeout(promise, () => new Error('Timed out reaching phone')));
   if (response.error) throw new Error(response.error);
   return response;
 }

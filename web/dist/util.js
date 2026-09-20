@@ -128,17 +128,24 @@ export const saveRelay = ({ url, token }) => {
   setOrRemove('bru.relayToken', token);
 };
 
-const RELAY_TIMEOUT_MS = 15_000;
+const TIMEOUT_MS = 15_000;
 
-/** @param {import('./pkg/bru_web.js').Bru} bru */
-export const relayReady = (bru) => {
+/**
+ * @template T
+ * @param {Promise<T>} promise
+ * @param {() => Error} makeError
+ */
+export const withTimeout = (promise, makeError) => {
   /** @type {number} */
   let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error(bru.relay_error())), RELAY_TIMEOUT_MS);
-  });
-  return Promise.race([bru.online(), timeout]).finally(() => clearTimeout(timer));
+  const timeout = /** @type {Promise<T>} */(new Promise((_, reject) => {
+    timer = setTimeout(() => reject(makeError()), TIMEOUT_MS);
+  }));
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 };
+
+/** @param {import('./pkg/bru_web.js').Bru} bru */
+export const relayReady = (bru) => withTimeout(bru.online(), () => new Error(bru.relay_error()));
 
 /** @returns {Phone | null} the paired phone, if any */
 export const loadPhone = () => {
