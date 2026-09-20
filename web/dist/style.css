@@ -246,6 +246,7 @@ footer {
     transform: translateY(1px);
 }
 
+.thread-name,
 .thread-preview {
     overflow: hidden;
     white-space: nowrap;
@@ -265,7 +266,6 @@ footer {
     flex-direction: column;
     gap: 1rem;
     border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
-    padding-right: 1.25rem;
 }
 
 .thread-list {
