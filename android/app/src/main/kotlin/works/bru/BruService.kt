@@ -137,27 +137,33 @@ class BruService : Service() {
         private const val CHANNEL = "bru_status"
         private const val NOTIF_ID = 1
         private const val CLIP_CHANNEL = "bru_clipboard"
-        private const val CLIP_NOTIF_ID = 2
+        internal const val CLIP_NOTIF_ID = 2
 
         fun notifyClipboard(context: Context, text: String) {
-            val tap = PendingIntent.getActivity(
+            fun pending(code: Int, key: String, value: String) = PendingIntent.getActivity(
                 context,
-                0,
+                code,
                 Intent(context, ClipboardActivity::class.java)
-                    .putExtra(ClipboardActivity.EXTRA_TEXT, text)
+                    .putExtra(key, value)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-            context.getSystemService(NotificationManager::class.java).notify(
-                CLIP_NOTIF_ID,
-                Notification.Builder(context, CLIP_CHANNEL)
-                    .setContentTitle("Clipboard from the client")
-                    .setContentText("Tap to copy")
-                    .setSmallIcon(R.drawable.ic_bru_notification)
-                    .setAutoCancel(true)
-                    .setContentIntent(tap)
-                    .build(),
-            )
+            val copy = pending(0, ClipboardActivity.EXTRA_TEXT, text)
+            val url = singleUrl(text)
+            val builder = Notification.Builder(context, CLIP_CHANNEL)
+                .setContentTitle("Text shared from Bru client")
+                .setContentText(url ?: "Tap to copy")
+                .setSmallIcon(R.drawable.ic_bru_notification)
+                .setContentIntent(copy)
+            if (url != null) {
+                val open = pending(1, ClipboardActivity.EXTRA_URL, url)
+                builder.setContentTitle("Link shared from Bru client")
+                builder.setContentIntent(open)
+                builder.addAction(Notification.Action.Builder(null, "Open", open).build())
+                builder.addAction(Notification.Action.Builder(null, "Copy", copy).build())
+            }
+            context.getSystemService(NotificationManager::class.java)
+                .notify(CLIP_NOTIF_ID, builder.build())
         }
 
         fun start(context: Context) {
@@ -169,3 +175,8 @@ class BruService : Service() {
         }
     }
 }
+
+internal fun singleUrl(text: String): String? =
+    text.trim().takeIf {
+        (it.startsWith("http://") || it.startsWith("https://")) && it.none(Char::isWhitespace)
+    }

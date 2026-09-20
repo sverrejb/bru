@@ -57,6 +57,7 @@
             android:name=".ClipboardActivity"
             android:exported="false"
             android:excludeFromRecents="true"
+            android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
