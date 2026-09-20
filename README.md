@@ -18,7 +18,9 @@ The web client is at [https://bru.works](https://bru.works), but you can also ma
 
 ## Installing the Android app
 
-Available for download from the [releases page](https://github.com/sverrejb/bru/releases/latest), or you can build the APK yourself, using Docker.
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/fdroid/index/apk/works.bru)
+
+Also available from the [releases page](https://github.com/sverrejb/bru/releases/latest), or you can build the APK yourself, using Docker.
 
 ```sh
 git clone https://github.com/sverrejb/bru
@@ -26,8 +28,6 @@ cd bru
 docker build -t bru-apk android
 mkdir -p out && docker run --rm -v "$PWD/out:/out" bru-apk
 ```
-
-The image is pinned to `linux/amd64` because Google only ships x86_64 build tools, so on an ARM machine the build runs emulated and takes around ten minutes. Elsewhere it is a couple of minutes.
 
 You now have two APKs in `out/`:
 
