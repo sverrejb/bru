@@ -2,7 +2,7 @@
 
 A **B**idirectional **R**emote **U**plink (also Norwegian for "bridge").
 
-Sync your phone and computer over an end-to-end-encrypted
+Connect your phone and computer over an end-to-end-encrypted
 [iroh](https://iroh.computer) link. No cloud account, no external databases, no port
 forwarding or fiddling with network settings.
 
