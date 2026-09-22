@@ -1,6 +1,14 @@
 :root {
     --text-color: #3d3a35;
+    --muted-text-color: #595651;
     --bg-color: #f7f5f0;
+    --card-bg-color: #fffdf8;
+    --accent-color: #335a3d;
+    --accent-dark-color: #284630;
+    --info-color: #2c4760;
+    --info-dark-color: #22374b;
+    --danger-color: #8f331f;
+    --danger-dark-color: #702818;
     --qr-width: 400px;
 }
 
@@ -42,8 +50,16 @@ header {
     margin-bottom: 1rem;
 }
 
-header h1 {
-    margin-bottom: 0;
+.logo {
+    font-size: 3rem;
+    letter-spacing: 0.05em;
+    font-weight: bolder;
+}
+
+.page-title {
+    font-size: 1.5em;
+    letter-spacing: normal;
+    margin: 0.83em 0;
 }
 
 header a {
@@ -52,17 +68,27 @@ header a {
 }
 
 .nav-links {
-    text-decoration: underline;
     display: flex;
     flex-wrap: wrap;
     gap: 1.5rem;
 }
 
+.nav-links a {
+    text-decoration: underline;
+}
+
+.nav-links a[aria-current] {
+    text-decoration-thickness: 2px;
+    text-decoration-skip-ink: none;
+    text-underline-offset: 3px;
+}
+
 .nav-links a:hover {
-    color: #a8402a;
+    color: var(--danger-color);
 }
 
 .subtitle {
+    margin: 0;
     font-size: 1.5rem;
     font-weight: bold;
     flex-basis: 100%;
@@ -75,19 +101,19 @@ p {
 }
 
 .dumb-joke {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
 }
 
 .dumb-joke a,
 .dumb-joke a:visited {
-    color: #6b665e;
+    color: var(--text-color);
     text-decoration: none;
     cursor: pointer;
     font-style: italic;
 }
 
 .error {
-    color: #a8402a;
+    color: var(--danger-color);
     font-weight: bolder;
 }
 
@@ -183,7 +209,7 @@ footer {
 }
 
 .footer-links a:hover {
-    color: #a8402a;
+    color: var(--danger-color);
 }
 
 .footer-links svg {
@@ -216,11 +242,11 @@ footer {
 }
 
 .card {
-    border: 2px solid #3d3a35;
+    border: 2px solid var(--text-color);
     border-radius: 4px;
     padding: 1rem 1.25rem;
     margin: 1rem 0;
-    background: #fffdf8;
+    background: var(--card-bg-color);
 }
 
 .btn {
@@ -323,7 +349,7 @@ footer {
 
 .thread-preview {
     font-size: 0.85rem;
-    opacity: 0.7;
+    color: var(--muted-text-color);
 }
 
 .message-row {
@@ -349,12 +375,11 @@ footer {
 }
 
 .message-row.failed {
-    background: color-mix(in srgb, #a8402a 25%, transparent);
+    background: color-mix(in srgb, var(--danger-color) 25%, transparent);
 }
 
 .message-row.failed .message-meta {
-    color: #a8402a;
-    opacity: 1;
+    color: var(--danger-dark-color);
 }
 
 .sendUI {
@@ -448,7 +473,7 @@ footer {
 .message-meta {
     margin-top: 0.25rem;
     font-size: 0.75rem;
-    opacity: 0.6;
+    color: var(--muted-text-color);
 }
 
 .toggle {
@@ -460,7 +485,7 @@ footer {
 
 #clearBtn {
     margin-top: 1.5rem;
-    background: #a8402a;
+    background: var(--danger-color);
 }
 
 #clearBtn::before {
@@ -468,7 +493,7 @@ footer {
 }
 
 #clearBtn:hover {
-    background: #8f331f;
+    background: var(--danger-dark-color);
 }
 
 dialog {
@@ -481,6 +506,12 @@ dialog {
 
 dialog h2 {
     margin-top: 0;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: bolder;
+    margin: 0 0 0.5rem;
 }
 
 dialog label,
@@ -508,27 +539,27 @@ dialog::backdrop {
 }
 
 .btn-accent {
-    background: #3f6b4a;
+    background: var(--accent-color);
 }
 
 .btn-accent:hover {
-    background: #335a3d;
+    background: var(--accent-dark-color);
 }
 
 .btn-info {
-    background: #3a5a78;
+    background: var(--info-color);
 }
 
 .btn-info:hover {
-    background: #2c4760;
+    background: var(--info-dark-color);
 }
 
 .btn-danger {
-    background: #a8402a;
+    background: var(--danger-color);
 }
 
 .btn-danger:hover {
-    background: #8f331f;
+    background: var(--danger-dark-color);
 }
 
 /* LOADER */

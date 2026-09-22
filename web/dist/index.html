@@ -49,6 +49,7 @@
 <body>
   <site-header subtitle="Bidirectional Remote Uplink"></site-header>
   <main>
+    <h1 class="visually-hidden">Bru — Bidirectional Remote Uplink</h1>
 
     <ul>
       <li>
@@ -101,9 +102,9 @@
       <a href="/phone">Go to your phone &rarr;</a>
     </section>
 
-    <dialog id="pairDialog">
+    <dialog id="pairDialog" aria-labelledby="pairTitle">
       <form method="dialog">
-        <h2>
+        <h2 id="pairTitle">
           Paired!
         </h2>
         <p>Successfully paired with <span id="phoneName"></span>!</p>
@@ -118,8 +119,8 @@
       </form>
     </dialog>
 
-    <dialog id="optionsDialog">
-      <h2>Advanced options</h2>
+    <dialog id="optionsDialog" aria-labelledby="optTitle">
+      <h2 id="optTitle">Advanced options</h2>
       <form method="dialog" id="relayForm">
         <fieldset>
           <legend>Custom Iroh relay</legend>
@@ -135,7 +136,7 @@
           <p id="relayStatus" aria-live="polite" hidden></p>
         </fieldset>
         <div class="dialog-actions">
-          <button class="btn" formnovalidate>Close</button>
+          <button id="relayCloseBtn" type="button" class="btn">Close</button>
           <button id="relaySaveBtn" class="btn btn-accent">Save</button>
         </div>
       </form>

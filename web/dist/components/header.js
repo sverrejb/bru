@@ -12,13 +12,14 @@ customElements.define('site-header', class extends HTMLElement {
   connectedCallback() {
     const subtitle = this.getAttribute('subtitle');
     const links = loadPhone() ? [['/phone/', 'Your phone'], ...LINKS] : LINKS;
+    const here = location.pathname.replace(/\/$/, '');
     this.innerHTML = `
 <header>
-  <a href="/"><h1>Bru</h1></a>
+  <a href="/" class="logo">Bru</a>
   <nav class="nav-links">
-    ${links.map(([href, text]) => `<a href="${href}">${text}</a>`).join('\n    ')}
+    ${links.map(([href, text]) => `<a href="${href}"${href.replace(/\/$/, '') === here ? ' aria-current="page"' : ''}>${text}</a>`).join('\n    ')}
   </nav>
-  ${subtitle ? `<span class="subtitle">${subtitle}</span>` : ''}
+  ${subtitle ? `<p class="subtitle">${subtitle}</p>` : ''}
 </header>`;
   }
 });

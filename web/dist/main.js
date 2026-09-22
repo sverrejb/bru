@@ -31,8 +31,9 @@ const relaySaveBtn = $('relaySaveBtn');
 /** @type {HTMLFormElement} */
 const relayForm = $('relayForm');
 
+$('relayCloseBtn').addEventListener('click', () => optionsDialog.close());
+
 relayForm.addEventListener('submit', async (e) => {
-  if (e.submitter !== relaySaveBtn) return;
   e.preventDefault();
   const url = relayInput.value.trim() || null;
   const token = tokenInput.value.trim() || null;

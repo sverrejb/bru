@@ -48,6 +48,8 @@ const copyClipboardBtn = $('copyClipboardBtn');
 const sendClipboardBtn = $('sendClipboardBtn');
 /** @type {HTMLElement} */
 const clipboardStatus = $('clipboardStatus');
+/** @type {HTMLElement} */
+const liveAnnounce = $('liveAnnounce');
 
 const phone = loadPhone() ?? goPair();
 
@@ -129,7 +131,11 @@ async function acceptLoop() {
       renderThreads();
       cache.messages.slice(seen)
         .filter((message) => message.direction === 'in')
-        .forEach((message) => notify(`New message from ${displayNameOf([message])}`));
+        .forEach((message) => {
+          const text = `New message from ${displayNameOf([message])}`;
+          announce(text);
+          notify(text);
+        });
     } catch (e) {
       console.error('[bru] accept-loop died', e);
       error.textContent = 'Lost the connection to your phone. Reload window to try again.';
@@ -419,4 +425,10 @@ async function askNotificationPermission() {
 function notify(text) {
   if (!notifyToggle.checked) return;
   new Notification(text, { icon: '../favicon.svg' });
+}
+
+/** @param {string} text */
+function announce(text) {
+  liveAnnounce.textContent = '';
+  requestAnimationFrame(() => { liveAnnounce.textContent = text; });
 }
