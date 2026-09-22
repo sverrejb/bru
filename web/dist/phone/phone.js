@@ -111,10 +111,8 @@ function goPair() {
 async function acceptLoop() {
   const error = $('healthError');
   while (true) {
-    console.debug("accept-loop start");
     try {
       const { id, message } = JSON.parse(await bru.accept_incoming());
-      console.debug('[bru] accept_incoming from', id, id === phone.id ? '(our phone)' : '(ignored)', message);
       if (id !== phone.id) continue;
 
       if (message.op === 'clipboard') {
@@ -216,10 +214,8 @@ async function sendMessage() {
   drafts.delete(to);
   renderMessages(messagesOf(row));
 
-  console.debug('[bru] sending', { to, clientId });
   try {
     const response = await callBru(bru.send_message(phone.id, to, body, clientId));
-    console.debug('[bru] send response', response);
     optimistic.status = response.status;
   } catch (e) {
     console.error('[bru] send failed', { to, clientId }, e);
@@ -277,11 +273,9 @@ function reconcilePending() {
   const confirmedIds = new Set(cache.messages.map((m) => m.clientId));
   for (const clientId of pending.keys()) {
     if (confirmedIds.has(clientId)) {
-      console.debug('[bru] reconciled pending send', clientId);
       pending.delete(clientId);
     }
   }
-  if (pending.size > 0) console.debug('[bru] still awaiting sync for', [...pending.keys()]);
 }
 
 /** @param {Message["body"]} body */
@@ -309,9 +303,7 @@ async function syncMessages() {
   let hasMore = true;
 
   while (hasMore) {
-    console.debug('[bru] fetching messages since', cache.cursor);
     const page = JSON.parse(await bru.messages(phone.id, cache.cursor, PAGE_SIZE));
-    console.debug('[bru] got', page.messages.length, 'messages, new cursor', page.cursor, 'hasMore', page.hasMore);
     messages.push(...page.messages);
     newMessages.push(...page.messages);
     cache.cursor = page.cursor;
