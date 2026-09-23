@@ -4,7 +4,7 @@ A **B**idirectional **R**emote **U**plink (also Norwegian for "bridge").
 
 * **Read and send your phone's SMS**. Conveniently from a desktop, no need to pull out your phone. 
 
-* **Send and receive links, clipboard text and images to and form your phone.** No more typing things manually or struggling with long URLs you rather browse on your computer, or typing in long codes manually on your phone.
+* **Send and receive links, clipboard text and images to and form your phone.** No more typing long URLs you rather browse on your computer, or typing in long codes manually on your phone.
 
 
 Connects your phone and computer over an end-to-end-encrypted
