@@ -8,12 +8,19 @@ use wasm_bindgen::prelude::*;
 
 const ALPN: &[u8] = b"bru/1";
 const MAX_RESPONSE: usize = 16 * 1024 * 1024;
+const MAX_PUSH: usize = 8 * 1024 * 1024;
+const LOG_LIMIT: usize = 200;
 const PAIRING_URL: &str = "https://bru.works/pair";
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn console_log(s: &str);
+}
+
+// truncate log so that we do not log out the whole payload
+fn log(s: &str) {
+    console_log(&s.chars().take(LOG_LIMIT).collect::<String>());
 }
 
 // This escapes only what JSON requires and leaves everything else as raw UTF-8, which JSON strings allow unescaped.
@@ -33,6 +40,10 @@ fn json_string(s: &str) -> String {
     }
     out.push('"');
     out
+}
+
+fn is_base64(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || matches!(b, b'+' | b'/' | b'=')
 }
 
 #[wasm_bindgen]
@@ -143,7 +154,7 @@ impl Bru {
         log(&format!("[bru] accept_incoming: connection from {phone_id}"));
 
         let (mut send, mut recv) = conn.accept_bi().await?;
-        let bytes = recv.read_to_end(4096).await?;
+        let bytes = recv.read_to_end(MAX_PUSH).await?;
         let message = String::from_utf8_lossy(&bytes);
         log(&format!("[bru] accept_incoming: message={message}"));
         send.write_all(br#"{"ok":true}"#).await?;
@@ -178,8 +189,26 @@ impl Bru {
         self.request(phone_id, req.as_bytes()).await
     }
 
-    pub async fn send_clipboard(&self, phone_id: &str, text: &str) -> Result<String, JsError> {
-        let req = format!(r#"{{"op":"clipboard","text":{}}}"#, json_string(text));
+    pub async fn send_clipboard(
+        &self,
+        phone_id: &str,
+        text: &str,
+        mime: Option<String>,
+        data: Option<String>,
+    ) -> Result<String, JsError> {
+        let mut req = format!(r#"{{"op":"clipboard","text":{}"#, json_string(text));
+        if let (Some(mime), Some(data)) = (mime, data) {
+            if !data.bytes().all(is_base64) {
+                return Err(JsError::new("image data must be base64"));
+            }
+            req.reserve(data.len() + 32);
+            req.push_str(r#","mime":"#);
+            req.push_str(&json_string(&mime));
+            req.push_str(r#","data":""#);
+            req.push_str(&data);
+            req.push('"');
+        }
+        req.push('}');
         self.request(phone_id, req.as_bytes()).await
     }
 }

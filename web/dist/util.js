@@ -134,15 +134,44 @@ const TIMEOUT_MS = 15_000;
  * @template T
  * @param {Promise<T>} promise
  * @param {() => Error} makeError
+ * @param {number} [ms]
  */
-export const withTimeout = (promise, makeError) => {
+export const withTimeout = (promise, makeError, ms = TIMEOUT_MS) => {
   /** @type {number} */
   let timer;
   const timeout = /** @type {Promise<T>} */(new Promise((_, reject) => {
-    timer = setTimeout(() => reject(makeError()), TIMEOUT_MS);
+    timer = setTimeout(() => reject(makeError()), ms);
   }));
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 };
+
+/**
+ * @param {Blob} blob
+ * @param {string} type
+ * @param {number} [quality]
+ * @returns {Promise<Blob>}
+ */
+export const reencode = async (blob, type, quality) => {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+  canvas.getContext('2d')?.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  return await canvas.convertToBlob({ type, quality });
+};
+
+/** @param {Blob} blob @returns {Promise<Blob>} */
+export const asPng = (blob) => (blob.type === 'image/png' ? Promise.resolve(blob) : reencode(blob, 'image/png'));
+
+/** @param {Blob} blob @returns {Promise<string>} the blob as base64, without the data-URL prefix */
+export const toBase64 = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onerror = () => reject(reader.error ?? new Error('Could not read the image'));
+  reader.onload = () => {
+    const url = String(reader.result);
+    resolve(url.slice(url.indexOf(',') + 1));
+  };
+  reader.readAsDataURL(blob);
+});
 
 /** @param {import('./pkg/bru_web.js').Bru} bru */
 export const relayReady = (bru) => withTimeout(bru.online(), () => new Error(bru.relay_error()));
