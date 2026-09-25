@@ -73,7 +73,11 @@
                         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
                     </svg>
                 </h2>
-                <textarea id="clipboardText" aria-labelledby="clipLbl" placeholder="Paste text here"></textarea>
+                <textarea id="clipboardText" aria-labelledby="clipLbl" placeholder="Paste text or an image here"></textarea>
+                <div id="clipboardImageBox" hidden>
+                    <img id="clipboardImage" alt="Pasted image">
+                    <button id="clearClipboardBtn" class="clipboard-clear" aria-label="Remove image">✕</button>
+                </div>
                 <div class="clipboard-actions">
                     <button id="copyClipboardBtn" class="btn btn-info">Copy</button>
                     <button id="sendClipboardBtn" class="btn btn-accent">Send to phone</button>

@@ -5,8 +5,8 @@
 import init, { Bru } from '../pkg/bru_web.js';
 import { initEmojiPalette } from './emoji.js';
 import {
-  byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
-  loadPhone, loadRelay, mergeTempThreads, relayReady, saveMessageCache, sessionName, withTimeout,
+  asPng, byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
+  loadPhone, loadRelay, mergeTempThreads, reencode, relayReady, saveMessageCache, sessionName, toBase64, withTimeout,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
@@ -46,10 +46,25 @@ const clipboardText = $('clipboardText');
 const copyClipboardBtn = $('copyClipboardBtn');
 /** @type {HTMLButtonElement} */
 const sendClipboardBtn = $('sendClipboardBtn');
+/** @type {HTMLButtonElement} */
+const clearClipboardBtn = $('clearClipboardBtn');
+/** @type {HTMLImageElement} */
+const clipboardImage = $('clipboardImage');
+/** @type {HTMLElement} */
+const clipboardImageBox = $('clipboardImageBox');
 /** @type {HTMLElement} */
 const clipboardStatus = $('clipboardStatus');
 /** @type {HTMLElement} */
 const liveAnnounce = $('liveAnnounce');
+
+// 8 MiB frame limit, minus base64 inflation and JSON overhead
+const IMAGE_CAP = 5 * 1024 * 1024;
+const JPEG_QUALITY = 0.8;
+// longer timeout in case of large images TODO: test some scenarios, maybe this is too generous
+const IMAGE_TIMEOUT_MS = 60_000;
+
+/** @type {Blob | null} */
+let clipboardBlob = null;
 
 const phone = loadPhone() ?? goPair();
 
@@ -66,6 +81,7 @@ $('sendBtn').onclick = sendMessage;
 $('newBtn').onclick = newMessage;
 copyClipboardBtn.onclick = copyClipboard;
 sendClipboardBtn.onclick = sendClipboard;
+clearClipboardBtn.onclick = () => showImage(null);
 
 notifyToggle.checked = Notification.permission === 'granted' && localStorage.getItem('bru.notify') === 'on';
 notifyToggle.onchange = askNotificationPermission;
@@ -80,6 +96,20 @@ smsBody.onkeydown = (e) => {
 clipboardText.onkeydown = (e) => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) sendClipboard();
 };
+
+document.addEventListener('paste', async (e) => {
+  const pasted = e.target === smsBody ? undefined : e.clipboardData?.files[0];
+  if (!pasted?.type.startsWith('image/')) return;
+  e.preventDefault();
+  // the clipboard hands over a decoded PNG, so a photo arrives many times its original size
+  const image = pasted.size > IMAGE_CAP ? await reencode(pasted, 'image/jpeg', JPEG_QUALITY) : pasted;
+  if (image.size > IMAGE_CAP) {
+    showStatus('That image is too large.');
+    return;
+  }
+  showStatus('');
+  showImage(image);
+});
 threadListEl.onclick = (e) => {
   const row = asRow(/** @type {Element} */(e.target).closest('.thread-row'));
   if (row) {
@@ -116,7 +146,7 @@ async function acceptLoop() {
       if (id !== phone.id) continue;
 
       if (message.op === 'clipboard') {
-        clipboardText.value = message.text;
+        if (message.text) clipboardText.value = message.text;
         continue;
       }
       if (message.op !== 'wake') {
@@ -224,35 +254,61 @@ async function sendMessage() {
   renderMessages(messagesOf(row));
 }
 
+/** @param {Blob | null} blob */
+function showImage(blob) {
+  URL.revokeObjectURL(clipboardImage.src);
+  clipboardBlob = blob;
+  if (blob) clipboardImage.src = URL.createObjectURL(blob);
+  else clipboardImage.removeAttribute('src');
+  clipboardImageBox.hidden = !blob;
+  clipboardText.hidden = blob !== null;
+}
+
+/** @param {string} message */
+function showStatus(message) {
+  clipboardStatus.textContent = message;
+  clipboardStatus.hidden = !message;
+}
+
 async function copyClipboard() {
-  if (!clipboardText.value) return;
+  if (!clipboardBlob && !clipboardText.value) return;
   try {
-    await navigator.clipboard.writeText(clipboardText.value);
+    if (clipboardBlob) {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': asPng(clipboardBlob) })]);
+    } else {
+      await navigator.clipboard.writeText(clipboardText.value);
+    }
     flashButton(copyClipboardBtn, 'Copied!');
   } catch (e) {
     console.error('[bru] clipboard copy failed', e);
+    showStatus(clipboardBlob ? 'Your browser would not take the image. Right-click it to save instead.' : 'Could not copy.');
   }
 }
 
 async function sendClipboard() {
-  if (!clipboardText.value) return;
+  if (!clipboardBlob && !clipboardText.value) return;
   try {
-    await callBru(bru.send_clipboard(phone.id, clipboardText.value));
+    const data = clipboardBlob ? await toBase64(clipboardBlob) : undefined;
+    await callBru(
+      bru.send_clipboard(phone.id, clipboardBlob ? '' : clipboardText.value, clipboardBlob?.type, data),
+      clipboardBlob ? IMAGE_TIMEOUT_MS : undefined,
+    );
     flashButton(sendClipboardBtn, 'Sent!');
     clipboardText.value = '';
-    clipboardStatus.hidden = true;
+    showImage(null);
+    showStatus('');
   } catch (e) {
     console.error('[bru] clipboard send failed', e);
-    clipboardStatus.textContent = e instanceof Error ? e.message : 'Could not reach phone.';
-    clipboardStatus.hidden = false;
+    showStatus(e instanceof Error ? e.message : 'Could not reach phone.');
   }
 }
 
 /**
  * @param {Promise<string>} promise
+ * @param {number} [timeoutMs]
  */
-async function callBru(promise) {
-  const response = JSON.parse(await withTimeout(promise, () => new Error('Timed out reaching phone')));
+async function callBru(promise, timeoutMs) {
+  const response = JSON.parse(await withTimeout(promise, () => new Error('Timed out reaching phone'), timeoutMs));
   if (response.error) throw new Error(response.error);
   return response;
 }

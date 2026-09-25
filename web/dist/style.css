@@ -464,6 +464,37 @@ footer {
     color: var(--text-color);
 }
 
+#clipboardImageBox {
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+}
+
+#clipboardImage {
+    display: block;
+    max-width: 100%;
+    max-height: 8rem;
+    border: 1px solid color-mix(in srgb, var(--text-color) 30%, transparent);
+    border-radius: 4px;
+}
+
+.clipboard-clear {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.8rem;
+    line-height: 1;
+    color: var(--bg-color);
+    background: var(--text-color);
+    border: 1px solid var(--bg-color);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 .clipboard-actions {
     display: flex;
     gap: 0.5rem;
