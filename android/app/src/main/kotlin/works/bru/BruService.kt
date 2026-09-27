@@ -13,6 +13,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -139,8 +141,8 @@ class BruService : Service() {
         private const val CLIP_CHANNEL = "bru_clipboard"
         internal const val CLIP_NOTIF_ID = 2
 
-        fun notifyClipboard(context: Context, text: String) {
-            fun pending(code: Int, key: String, value: String) = PendingIntent.getActivity(
+        private fun pending(context: Context, code: Int, key: String, value: String) =
+            PendingIntent.getActivity(
                 context,
                 code,
                 Intent(context, ClipboardActivity::class.java)
@@ -148,20 +150,33 @@ class BruService : Service() {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
             )
-            val copy = pending(0, ClipboardActivity.EXTRA_TEXT, text)
+
+        fun notifyClipboard(context: Context, text: String) {
+            val copy = pending(context, 0, ClipboardActivity.EXTRA_TEXT, text)
             val url = singleUrl(text)
             val builder = Notification.Builder(context, CLIP_CHANNEL)
-                .setContentTitle("Text shared from Bru client")
+                .setContentTitle("Bru: Text shared")
                 .setContentText(url ?: "Tap to copy")
                 .setSmallIcon(R.drawable.ic_bru_notification)
                 .setContentIntent(copy)
             if (url != null) {
-                val open = pending(1, ClipboardActivity.EXTRA_URL, url)
-                builder.setContentTitle("Link shared from Bru client")
+                val open = pending(context, 1, ClipboardActivity.EXTRA_URL, url)
+                builder.setContentTitle("Bru: Link shared")
                 builder.setContentIntent(open)
                 builder.addAction(Notification.Action.Builder(null, "Open", open).build())
                 builder.addAction(Notification.Action.Builder(null, "Copy", copy).build())
             }
+            context.getSystemService(NotificationManager::class.java)
+                .notify(CLIP_NOTIF_ID, builder.build())
+        }
+
+        fun notifyClipboardImage(context: Context, image: Uri) {
+            val builder = Notification.Builder(context, CLIP_CHANNEL)
+                .setContentTitle("Bru: Image shared")
+                .setContentText("Tap to copy")
+                .setSmallIcon(R.drawable.ic_bru_notification)
+                .setContentIntent(pending(context, 2, ClipboardActivity.EXTRA_IMAGE, image.toString()))
+                .setLargeIcon(Icon.createWithContentUri(image))
             context.getSystemService(NotificationManager::class.java)
                 .notify(CLIP_NOTIF_ID, builder.build())
         }
