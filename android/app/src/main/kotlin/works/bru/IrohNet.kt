@@ -27,7 +27,7 @@ object IrohNet {
     val ALPN = "bru/1".toByteArray()
     private const val TAG = "bru"
 
-    private val MAX_FRAME: UInt = 4u * 1024u * 1024u
+    private val MAX_FRAME: UInt = 8u * 1024u * 1024u
     private val QUIC_PORT: UShort = 7842u
     private const val RELAY_TIMEOUT_MS = 15_000L
 
@@ -122,8 +122,7 @@ object IrohNet {
             return
         }
         val bi = conn.acceptBi()
-        val reqBytes = bi.recv().readToEnd(MAX_FRAME)
-        val respJson = dispatch(String(reqBytes, Charsets.UTF_8))
+        val respJson = dispatch(String(bi.recv().readToEnd(MAX_FRAME), Charsets.UTF_8))
         val send = bi.send()
         send.writeAll(respJson.toByteArray(Charsets.UTF_8))
         send.finish()

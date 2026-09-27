@@ -5,6 +5,7 @@ import android.util.Log
 import works.bru.db.MessageLog
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Base64
 
 const val AGENT_VERSION = "1.0.0"
 
@@ -56,17 +57,28 @@ suspend fun dispatch(
             }
         }
 
-        "clipboard" -> {
-            val text = req.optString("text")
-            if (text.isEmpty()) {
-                errorJson("empty clipboard")
-            } else {
-                BruService.notifyClipboard(context, text)
-                JSONObject().put("ok", true).toString()
-            }
-        }
+        "clipboard" -> clipboard(context, req)
 
         else -> errorJson("unsupported op")
+    }
+}
+
+private suspend fun clipboard(context: Context, req: JSONObject): String {
+    val text = req.optString("text")
+    val data = req.optString("data")
+    val image = data.takeIf { it.isNotEmpty() }
+        ?.let { runCatching { Base64.getDecoder().decode(it) }.getOrNull() }
+    return when {
+        image != null -> {
+            BruService.notifyClipboardImage(context, writeClip(context, req.optString("mime"), image))
+            okJson()
+        }
+        data.isNotEmpty() -> errorJson("image data must be base64")
+        text.isNotEmpty() -> {
+            BruService.notifyClipboard(context, text)
+            okJson()
+        }
+        else -> errorJson("empty clipboard")
     }
 }
 
@@ -100,6 +112,8 @@ private fun messageJson(row: MessageLog): JSONObject = JSONObject()
     .put("direction", row.direction)
     .put("status", row.status)
     .put("clientId", row.clientId ?: JSONObject.NULL)
+
+private fun okJson(): String = JSONObject().put("ok", true).toString()
 
 private fun errorJson(message: String): String =
     JSONObject().put("error", message).toString()
