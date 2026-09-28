@@ -5,8 +5,9 @@
 import init, { Bru } from '../pkg/bru_web.js';
 import { initEmojiPalette } from './emoji.js';
 import {
-  asPng, byRecency, clearAll, displayNameOf, formatDate, groupByThread, newestOf, loadMessageCache, loadOrCreateKey,
-  loadPhone, loadRelay, mergeTempThreads, reencode, relayReady, saveMessageCache, sessionName, toBase64, withTimeout,
+  asPng, byRecency, clearAll, displayNameOf, formatDate, fromBase64, groupByThread, newestOf, loadMessageCache,
+  loadOrCreateKey, loadPhone, loadRelay, mergeTempThreads, reencode, relayReady, saveMessageCache, sessionName, toBase64,
+  withTimeout,
 } from '../util.js';
 
 const PAGE_SIZE = 500;
@@ -109,6 +110,7 @@ document.addEventListener('paste', async (e) => {
   }
   showStatus('');
   showImage(image);
+  announce('Image pasted');
 });
 threadListEl.onclick = (e) => {
   const row = asRow(/** @type {Element} */(e.target).closest('.thread-row'));
@@ -146,7 +148,9 @@ async function acceptLoop() {
       if (id !== phone.id) continue;
 
       if (message.op === 'clipboard') {
+        showImage(message.data ? fromBase64(message.data, message.mime) : null);
         if (message.text) clipboardText.value = message.text;
+        announce(message.data ? 'Image received from your phone' : 'Text received from your phone');
         continue;
       }
       if (message.op !== 'wake') {
@@ -256,18 +260,21 @@ async function sendMessage() {
 
 /** @param {Blob | null} blob */
 function showImage(blob) {
+  const refocus = document.activeElement === (blob ? clipboardText : clearClipboardBtn);
   URL.revokeObjectURL(clipboardImage.src);
   clipboardBlob = blob;
   if (blob) clipboardImage.src = URL.createObjectURL(blob);
   else clipboardImage.removeAttribute('src');
   clipboardImageBox.hidden = !blob;
   clipboardText.hidden = blob !== null;
+  if (refocus) (blob ? clearClipboardBtn : clipboardText).focus();
 }
 
 /** @param {string} message */
 function showStatus(message) {
-  clipboardStatus.textContent = message;
+  clipboardStatus.textContent = '';
   clipboardStatus.hidden = !message;
+  requestAnimationFrame(() => { clipboardStatus.textContent = message; });
 }
 
 async function copyClipboard() {
@@ -323,6 +330,7 @@ async function callBru(promise, timeoutMs) {
 function flashButton(btn, text) {
   const original = btn.textContent;
   btn.textContent = text;
+  announce(text);
   setTimeout(() => { btn.textContent = original; }, 1200);
 }
 

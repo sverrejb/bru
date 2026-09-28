@@ -291,7 +291,6 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
 }
 
 .thread-list {
@@ -302,6 +301,7 @@ footer {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    border-right: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
 }
 
 .message-column {
@@ -330,7 +330,7 @@ footer {
     text-align: left;
     background: none;
     cursor: pointer;
-    padding: 0.5rem 0;
+    padding: 0.5rem;
     border: none;
     border-bottom: 1px solid color-mix(in srgb, var(--text-color) 15%, transparent);
 }

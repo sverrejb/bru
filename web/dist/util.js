@@ -173,6 +173,14 @@ export const toBase64 = (blob) => new Promise((resolve, reject) => {
   reader.readAsDataURL(blob);
 });
 
+/** @param {string} data base64, without a data-URL prefix @param {string} type */
+export const fromBase64 = (data, type) => {
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type });
+};
+
 /** @param {import('./pkg/bru_web.js').Bru} bru */
 export const relayReady = (bru) => withTimeout(bru.online(), () => new Error(bru.relay_error()));
 
