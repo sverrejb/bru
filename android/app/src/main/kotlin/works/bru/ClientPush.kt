@@ -6,8 +6,9 @@ import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import java.util.Base64
 
-class WakeNotifier(private val context: Context) {
+class ClientPush(private val context: Context) {
 
     suspend fun fire(reason: String = "new_sms"): Boolean {
         val json = JSONObject()
@@ -26,8 +27,13 @@ class WakeNotifier(private val context: Context) {
         return false
     }
 
-    suspend fun sendClipboard(text: String): Boolean =
-        IrohNet.dialPeer(context, JSONObject().put("op", "clipboard").put("text", text).toString())
+    suspend fun sendClipboard(text: String, mime: String? = null, bytes: ByteArray? = null): Boolean {
+        val payload = JSONObject().put("op", "clipboard").put("text", text)
+        if (mime != null && bytes != null) {
+            payload.put("mime", mime).put("data", Base64.getEncoder().encodeToString(bytes))
+        }
+        return IrohNet.dialPeer(context, payload.toString())
+    }
 
     companion object {
         private const val TAG = "bru"

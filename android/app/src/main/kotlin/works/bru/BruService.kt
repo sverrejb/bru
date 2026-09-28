@@ -45,7 +45,7 @@ class BruService : Service() {
             if (!sender.messageFailed(seq, resultCode == Activity.RESULT_OK)) return
             scope.launch {
                 repo.markFailed(seq)
-                WakeNotifier(this@BruService).fire("sent_status")
+                ClientPush(this@BruService).fire("sent_status")
             }
         }
     }
@@ -108,7 +108,7 @@ class BruService : Service() {
             return
         }
         Log.i(TAG, "ingest: $added new")
-        if (notify && added > 0) WakeNotifier(this).fire()
+        if (notify && added > 0) ClientPush(this).fire()
     }
 
     private fun startForegroundNotice() {

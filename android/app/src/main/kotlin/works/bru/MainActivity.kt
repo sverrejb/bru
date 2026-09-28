@@ -124,7 +124,7 @@ class MainActivity : Activity() {
     }
 
     private fun render() {
-        val peer = WakeNotifier.pairedPeer(this)
+        val peer = ClientPush.pairedPeer(this)
         val paired = peer != null
 
         status.text = when {
@@ -225,7 +225,7 @@ class MainActivity : Activity() {
         wakeStatus = "Reaching the client…"
         render()
         scope.launch {
-            val delivered = WakeNotifier(this@MainActivity).fire("pairing")
+            val delivered = ClientPush(this@MainActivity).fire("pairing")
             wakeStatus = if (delivered) {
                 null
             } else {
