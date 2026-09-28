@@ -1,3 +1,4 @@
+* RCS-support
 * PIN code with encryption? Or encrypted indexeddb?
 * Beef up security with a wrapping key
 * Image support copy/paste share
