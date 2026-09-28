@@ -23,7 +23,7 @@ suspend fun dispatch(
     return when (req.optString("op")) {
         "health" -> JSONObject()
             .put("status", "ok")
-            .put("deviceName", WakeNotifier.deviceName(context))
+            .put("deviceName", ClientPush.deviceName(context))
             .put("agentVersion", AGENT_VERSION)
             .put("headCursor", repo.headCursor())
             .toString()
