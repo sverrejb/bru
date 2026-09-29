@@ -1,0 +1,5 @@
+Share images.
+
+* Share a photo or screenshot to "Bru: Share to client" to send it to your client
+* An image sent from the client arrives as a notification; tap it to copy it
+* Links sent from the client can be opened straight from the notification

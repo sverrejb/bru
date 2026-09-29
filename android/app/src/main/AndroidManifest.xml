@@ -62,7 +62,7 @@
 
         <activity
             android:name=".ProcessTextActivity"
-            android:label="Copy to client"
+            android:label="Bru: Share to client"
             android:exported="true"
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
