@@ -3,8 +3,8 @@
 import { loadPhone } from '../util.js';
 
 const LINKS = [
-  ['/selfhost/', 'Self host'],
   ['/about/', 'About'],
+  ['/selfhost/', 'Self host'],
   ['/privacy/', 'Privacy'],
 ];
 
