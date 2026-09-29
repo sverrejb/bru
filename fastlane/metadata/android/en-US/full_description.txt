@@ -5,7 +5,7 @@ It links your phone to a client in your browser over a direct, end-to-end-encryp
 FEATURES
 
 * Read and send SMS. Handle conversations with a real keyboard instead of reaching for your phone.
-* Share a clipboard. Send text in either direction. No more retyping addresses or emailing yourself long links.
+* Share a clipboard. Send text and images in either direction. No more retyping addresses or emailing yourself long links.
 * 100% self hostable.
 
 HOW IT WORKS
