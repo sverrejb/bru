@@ -9,6 +9,7 @@
 * PWA support?
 * Searchbox for convos
 * Make new thread use existing contact names.
+* Add clear data button to frontpage, maybe?
 
-## Feasable?
+## Feasible?
 * RCS-support - this might not be possible at all. If not, we need to communicate that somehow, maybe.
