@@ -1,14 +1,19 @@
 use iroh::{
     Endpoint, EndpointAddr, EndpointId, RelayMap, RelayUrl, SecretKey, Watcher,
-    endpoint::{RelayMode, presets},
+    endpoint::{Connection, RecvStream, RelayMode, SendStream, presets},
 };
+use js_sys::{Function, Promise, Uint8Array};
+use n0_future::time::{Duration, timeout};
 use qrcode::{QrCode, render::svg};
-use std::str::FromStr;
-use wasm_bindgen::prelude::*;
+use std::{error::Error, str::FromStr};
+use wasm_bindgen::{JsCast, prelude::*};
+use wasm_bindgen_futures::JsFuture;
 
 const ALPN: &[u8] = b"bru/1";
 const MAX_RESPONSE: usize = 16 * 1024 * 1024;
 const MAX_PUSH: usize = 8 * 1024 * 1024;
+const CHUNK: usize = 64 * 1024;
+const STALL: Duration = Duration::from_secs(30);
 const LOG_LIMIT: usize = 200;
 const PAIRING_URL: &str = "https://bru.works/pair";
 
@@ -44,6 +49,80 @@ fn json_string(s: &str) -> String {
 
 fn is_base64(b: u8) -> bool {
     b.is_ascii_alphanumeric() || matches!(b, b'+' | b'/' | b'=')
+}
+
+fn js_error(e: JsValue) -> JsError {
+    JsError::new(&e.as_string().unwrap_or_else(|| format!("{e:?}")))
+}
+
+async fn read_header(recv: &mut RecvStream) -> Result<(Vec<u8>, Vec<u8>), Box<dyn Error>> {
+    let mut header = Vec::new();
+    while let Some(chunk) = recv.read_chunk(CHUNK).await? {
+        if let Some(i) = chunk.iter().position(|&b| b == b'\n') {
+            header.extend_from_slice(&chunk[..i]);
+            return Ok((header, chunk[i + 1..].to_vec()));
+        }
+        header.extend_from_slice(&chunk);
+        if header.len() > MAX_PUSH {
+            return Err("message too large".into());
+        }
+    }
+    Ok((header, Vec::new()))
+}
+
+fn deliver(on_chunk: &Function, bytes: &[u8]) -> Result<(), Box<dyn Error>> {
+    on_chunk
+        .call1(&JsValue::NULL, &Uint8Array::from(bytes))
+        .map(|_| ())
+        .map_err(|_| "chunk handler failed".into())
+}
+
+async fn pump(send: &mut SendStream, next: &Function) -> Result<(), JsError> {
+    loop {
+        let pending = next.call0(&JsValue::NULL).map_err(js_error)?;
+        let chunk = JsFuture::from(Promise::resolve(&pending)).await.map_err(js_error)?;
+        if chunk.is_null() {
+            return Ok(());
+        }
+        let bytes = chunk
+            .dyn_into::<Uint8Array>()
+            .map_err(|_| JsError::new("file chunks must be bytes"))?;
+        timeout(STALL, send.write_all(&bytes.to_vec()))
+            .await
+            .map_err(|_| JsError::new("Timed out reaching phone"))??;
+    }
+}
+
+async fn exchange(conn: &Connection, req: &[u8], body: Option<&Function>) -> Result<Vec<u8>, JsError> {
+    let (mut send, mut recv) = conn.open_bi().await?;
+    send.write_all(req).await?;
+    if let Some(next) = body {
+        send.write_all(b"\n").await?;
+        pump(&mut send, next).await?;
+    }
+    send.finish()?;
+    Ok(recv.read_to_end(MAX_RESPONSE).await?)
+}
+
+async fn receive(conn: &Connection, on_chunk: &Function) -> Result<String, Box<dyn Error>> {
+    let (mut send, mut recv) = conn.accept_bi().await?;
+    let (header, mut batch) = read_header(&mut recv).await?;
+    let message = String::from_utf8_lossy(&header).into_owned();
+    log(&format!("[bru] accept_incoming: message={message}"));
+    while let Some(chunk) = recv.read_chunk(CHUNK).await? {
+        batch.extend_from_slice(&chunk);
+        if batch.len() >= CHUNK {
+            deliver(on_chunk, &batch)?;
+            batch.clear();
+        }
+    }
+    if !batch.is_empty() {
+        deliver(on_chunk, &batch)?;
+    }
+    send.write_all(br#"{"ok":true}"#).await?;
+    send.finish()?;
+    conn.closed().await;
+    Ok(message)
 }
 
 #[wasm_bindgen]
@@ -142,35 +221,40 @@ impl Bru {
             .build())
     }
 
-    pub async fn accept_incoming(&self) -> Result<String, JsError> {
+    pub async fn accept_incoming(
+        &self,
+        phone_id: Option<String>,
+        on_chunk: Function,
+    ) -> Result<String, JsError> {
         log("[bru] accept_incoming: waiting for a connection");
-        let conn = self
+        let incoming = self
             .endpoint
             .accept()
             .await
-            .ok_or_else(|| JsError::new("endpoint closed"))?
-            .await?;
-        let phone_id = conn.remote_id().to_string();
-        log(&format!("[bru] accept_incoming: connection from {phone_id}"));
-
-        let (mut send, mut recv) = conn.accept_bi().await?;
-        let bytes = recv.read_to_end(MAX_PUSH).await?;
-        let message = String::from_utf8_lossy(&bytes);
-        log(&format!("[bru] accept_incoming: message={message}"));
-        send.write_all(br#"{"ok":true}"#).await?;
-        send.finish()?;
-        conn.closed().await;
-
-        Ok(format!(r#"{{"id":"{phone_id}","message":{message}}}"#))
+            .ok_or_else(|| JsError::new("endpoint closed"))?;
+        let conn = match incoming.await {
+            Ok(conn) => conn,
+            Err(e) => return Ok(format!(r#"{{"error":{}}}"#, json_string(&e.to_string()))),
+        };
+        let remote = conn.remote_id().to_string();
+        log(&format!("[bru] accept_incoming: connection from {remote}"));
+        if phone_id.is_some_and(|id| id != remote) {
+            conn.close(1u32.into(), b"unknown peer");
+            return Ok(format!(r#"{{"id":"{remote}","error":"unknown peer"}}"#));
+        }
+        Ok(match receive(&conn, &on_chunk).await {
+            Ok(message) => format!(r#"{{"id":"{remote}","message":{message}}}"#),
+            Err(e) => format!(r#"{{"id":"{remote}","error":{}}}"#, json_string(&e.to_string())),
+        })
     }
 
     pub async fn health(&self, phone_id: &str) -> Result<String, JsError> {
-        self.request(phone_id, br#"{"op":"health"}"#).await
+        self.request(phone_id, br#"{"op":"health"}"#, None).await
     }
 
     pub async fn messages(&self, phone_id: &str, since: u32, limit: u32) -> Result<String, JsError> {
         let req = format!(r#"{{"op":"messages","since":{since},"limit":{limit}}}"#);
-        self.request(phone_id, req.as_bytes()).await
+        self.request(phone_id, req.as_bytes(), None).await
     }
 
     pub async fn send_message(
@@ -186,7 +270,7 @@ impl Bru {
             json_string(body),
             json_string(client_id),
         );
-        self.request(phone_id, req.as_bytes()).await
+        self.request(phone_id, req.as_bytes(), None).await
     }
 
     pub async fn send_clipboard(
@@ -209,12 +293,32 @@ impl Bru {
             req.push('"');
         }
         req.push('}');
-        self.request(phone_id, req.as_bytes()).await
+        self.request(phone_id, req.as_bytes(), None).await
+    }
+
+    pub async fn send_file(
+        &self,
+        phone_id: &str,
+        name: &str,
+        mime: &str,
+        next: Function,
+    ) -> Result<String, JsError> {
+        let header = format!(
+            r#"{{"op":"file","name":{},"mime":{}}}"#,
+            json_string(name),
+            json_string(mime),
+        );
+        self.request(phone_id, header.as_bytes(), Some(&next)).await
     }
 }
 
 impl Bru {
-    async fn request(&self, phone_id: &str, req: &[u8]) -> Result<String, JsError> {
+    async fn request(
+        &self,
+        phone_id: &str,
+        req: &[u8],
+        body: Option<&Function>,
+    ) -> Result<String, JsError> {
         log(&format!(
             "[bru] request to {phone_id}: {}",
             String::from_utf8_lossy(req)
@@ -224,12 +328,17 @@ impl Bru {
         if let Some(url) = &self.relay_url {
             addr = addr.with_relay_url(RelayUrl::from_str(url)?);
         }
-        let conn = self.endpoint.connect(addr, ALPN).await?;
+        let conn = timeout(STALL, self.endpoint.connect(addr, ALPN))
+            .await
+            .map_err(|_| JsError::new("Timed out reaching phone"))??;
 
-        let (mut send, mut recv) = conn.open_bi().await?;
-        send.write_all(req).await?;
-        send.finish()?;
-        let bytes = recv.read_to_end(MAX_RESPONSE).await?;
+        let bytes = match exchange(&conn, req, body).await {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                conn.close(1u32.into(), b"aborted");
+                return Err(e);
+            }
+        };
         conn.close(0u32.into(), b"ok");
 
         let response = String::from_utf8_lossy(&bytes).into_owned();
