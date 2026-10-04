@@ -22,12 +22,35 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
+
+typealias Body = suspend (OutputStream) -> Unit
+
+private const val MAX_FRAME = 8 * 1024 * 1024
+private const val CHUNK = 64 * 1024
+
+internal suspend fun readHeader(read: suspend () -> ByteArray): Pair<ByteArray, ByteArray> {
+    val header = ByteArrayOutputStream()
+    while (true) {
+        val chunk = read()
+        val newline = chunk.indexOf('\n'.code.toByte())
+        if (newline >= 0) {
+            header.write(chunk, 0, newline)
+            return header.toByteArray() to chunk.copyOfRange(newline + 1, chunk.size)
+        }
+        if (chunk.isEmpty()) return header.toByteArray() to ByteArray(0)
+        header.write(chunk)
+        if (header.size() > MAX_FRAME) throw IOException("frame too large")
+    }
+}
 
 object IrohNet {
     val ALPN = "bru/1".toByteArray()
     private const val TAG = "bru"
 
-    private val MAX_FRAME: UInt = 8u * 1024u * 1024u
     private val QUIC_PORT: UShort = 7842u
     private const val RELAY_TIMEOUT_MS = 15_000L
 
@@ -36,7 +59,7 @@ object IrohNet {
 
     private val serveScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     @Volatile private var serveJob: Job? = null
-    @Volatile private var dispatcher: (suspend (String) -> String)? = null
+    @Volatile private var dispatcher: (suspend (String, Body) -> String)? = null
 
     suspend fun endpoint(context: Context): Endpoint {
         endpoint?.let { return it }
@@ -84,7 +107,7 @@ object IrohNet {
         return withTimeoutOrNull(RELAY_TIMEOUT_MS) { ep.online() } != null
     }
 
-    fun startServing(context: Context, dispatch: suspend (String) -> String) {
+    fun startServing(context: Context, dispatch: suspend (String, Body) -> String) {
         if (serveJob?.isActive == true) return
         val app = context.applicationContext
         dispatcher = dispatch
@@ -113,7 +136,7 @@ object IrohNet {
         dispatcher = null
     }
 
-    private suspend fun handle(context: Context, conn: Connection, dispatch: suspend (String) -> String) {
+    private suspend fun handle(context: Context, conn: Connection, dispatch: suspend (String, Body) -> String) {
         val allowed = IdentityStore(context).peerId
         val remote = conn.remoteId().toString()
         if (allowed != remote) {
@@ -121,32 +144,51 @@ object IrohNet {
             conn.close(1, "unknown peer".toByteArray())
             return
         }
-        val bi = conn.acceptBi()
-        val respJson = dispatch(String(bi.recv().readToEnd(MAX_FRAME), Charsets.UTF_8))
-        val send = bi.send()
+        val biConnection = conn.acceptBi()
+        val recv = biConnection.recv()
+        val (header, rest) = readHeader { recv.read(CHUNK.toUInt()) }
+        val respJson = dispatch(String(header, Charsets.UTF_8)) { out ->
+            out.write(rest)
+            while (true) {
+                val chunk = recv.read(CHUNK.toUInt())
+                if (chunk.isEmpty()) break
+                out.write(chunk)
+            }
+        }
+        val send = biConnection.send()
         send.writeAll(respJson.toByteArray(Charsets.UTF_8))
         send.finish()
         conn.closed()
     }
 
-    suspend fun dialPeer(context: Context, reqJson: String): Boolean {
+    suspend fun dialPeer(context: Context, reqJson: String, body: InputStream? = null): Boolean {
         val store = IdentityStore(context)
         val peerId = store.peerId ?: run {
             Log.w(TAG, "no peer paired — cannot push")
             return false
         }
+        var conn: Connection? = null
         return try {
             val ep = endpoint(context)
             val addr = EndpointAddr(EndpointId.fromString(peerId), store.relayUrl, emptyList())
-            val conn = ep.connect(addr, ALPN)
-            val bi = conn.openBi()
+            val connected = ep.connect(addr, ALPN).also { conn = it }
+            val bi = connected.openBi()
             val send = bi.send()
-            send.writeAll(reqJson.toByteArray(Charsets.UTF_8))
+            send.writeAll((if (body != null) "$reqJson\n" else reqJson).toByteArray(Charsets.UTF_8))
+            body?.let { input ->
+                val buf = ByteArray(CHUNK)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    send.writeAll(buf.copyOf(n))
+                }
+            }
             send.finish()
-            bi.recv().readToEnd(MAX_FRAME)
-            conn.close(0, "ok".toByteArray())
+            bi.recv().readToEnd(MAX_FRAME.toUInt())
+            connected.close(0, "ok".toByteArray())
             true
         } catch (e: Exception) {
+            conn?.close(1, "aborted".toByteArray())
             Log.w(TAG, "dial peer failed: ${e.javaClass.simpleName}: ${e.message}")
             false
         }

@@ -90,7 +90,8 @@ async function pair() {
     $('pairUrl').textContent = bru.pair_url(name);
     $('sessionName').textContent = name.replaceAll('-', ' ');
 
-    const { id, message } = JSON.parse(await bru.accept_incoming());
+    const { id, message, error } = JSON.parse(await bru.accept_incoming(null, () => {}));
+    if (error) throw new Error(error);
     /** @type {Phone} */
     const paired = { id, name: message.name };
     savePhone(paired);

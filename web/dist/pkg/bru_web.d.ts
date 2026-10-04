@@ -12,7 +12,7 @@ export class Bru {
     private constructor();
     free(): void;
     [Symbol.dispose](): void;
-    accept_incoming(): Promise<string>;
+    accept_incoming(phone_id: string | null | undefined, on_chunk: Function): Promise<string>;
     close(): Promise<void>;
     health(phone_id: string): Promise<string>;
     id(): string;
@@ -23,6 +23,7 @@ export class Bru {
     pairing_code(name: string): string;
     relay_error(): string;
     send_clipboard(phone_id: string, text: string, mime?: string | null, data?: string | null): Promise<string>;
+    send_file(phone_id: string, name: string, mime: string, next: Function): Promise<string>;
     send_message(phone_id: string, to: string, body: string, client_id: string): Promise<string>;
 }
 
@@ -59,7 +60,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_bru_free: (a: number, b: number) => void;
-    readonly bru_accept_incoming: (a: number) => number;
+    readonly bru_accept_incoming: (a: number, b: number, c: number, d: number) => number;
     readonly bru_close: (a: number) => number;
     readonly bru_health: (a: number, b: number, c: number) => number;
     readonly bru_id: (a: number, b: number) => void;
@@ -70,6 +71,7 @@ export interface InitOutput {
     readonly bru_pairing_code: (a: number, b: number, c: number, d: number) => void;
     readonly bru_relay_error: (a: number, b: number) => void;
     readonly bru_send_clipboard: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
+    readonly bru_send_file: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
     readonly bru_send_message: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
     readonly ring_core_0_17_14__bn_mul_mont: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly __wbg_intounderlyingbytesource_free: (a: number, b: number) => void;
@@ -85,13 +87,13 @@ export interface InitOutput {
     readonly intounderlyingsink_write: (a: number, b: number) => number;
     readonly intounderlyingsource_cancel: (a: number) => void;
     readonly intounderlyingsource_pull: (a: number, b: number) => number;
-    readonly __wasm_bindgen_func_elem_4064: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_4124: (a: number, b: number, c: number, d: number) => void;
-    readonly __wasm_bindgen_func_elem_3118: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_3118_2: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_3118_3: (a: number, b: number, c: number) => void;
-    readonly __wasm_bindgen_func_elem_1505: (a: number, b: number) => void;
-    readonly __wasm_bindgen_func_elem_5238: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_4089: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_4149: (a: number, b: number, c: number, d: number) => void;
+    readonly __wasm_bindgen_func_elem_3146: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_3146_2: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_3146_3: (a: number, b: number, c: number) => void;
+    readonly __wasm_bindgen_func_elem_1560: (a: number, b: number) => void;
+    readonly __wasm_bindgen_func_elem_5262: (a: number, b: number) => void;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_export3: (a: number) => void;

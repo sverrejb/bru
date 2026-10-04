@@ -18,14 +18,21 @@ private const val JPEG_QUALITY = 80
 
 internal suspend fun writeClip(context: Context, mime: String, bytes: ByteArray): Uri =
     withContext(Dispatchers.IO) {
-        val dir = File(context.cacheDir, CLIP_DIR).apply {
-            mkdirs()
-            listFiles()?.forEach(File::delete)
-        }
-        val file = File(dir, "${System.currentTimeMillis()}.${extensionOf(mime)}")
+        val file = freshCacheFile(context, CLIP_DIR, "${System.currentTimeMillis()}.${extensionOf(mime)}")
         file.writeBytes(bytes)
-        FileProvider.getUriForFile(context, "${context.packageName}.clip", file)
+        cacheUri(context, file)
     }
+
+internal fun freshCacheFile(context: Context, dir: String, name: String): File {
+    val parent = File(context.cacheDir, dir).apply {
+        mkdirs()
+        listFiles()?.forEach(File::delete)
+    }
+    return File(parent, name)
+}
+
+internal fun cacheUri(context: Context, file: File): Uri =
+    FileProvider.getUriForFile(context, "${context.packageName}.clip", file)
 
 internal fun extensionOf(mime: String): String = mime.substringAfter('/', "jpg").substringBefore('+')
 

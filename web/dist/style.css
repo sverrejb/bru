@@ -273,7 +273,8 @@ footer {
 }
 
 .thread-name,
-.thread-preview {
+.thread-preview,
+.file-name {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -501,6 +502,52 @@ footer {
     margin-top: 0.5rem;
 }
 
+.drop-zone {
+    position: relative;
+    display: block;
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+    border: 2px dashed color-mix(in srgb, var(--text-color) 30%, transparent);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.drop-zone.dragging,
+.drop-zone:has(input:focus-visible) {
+    border-color: var(--accent-color);
+}
+
+.drop-zone input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+}
+
+.file-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.file-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.file-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-row .btn {
+    text-decoration: none;
+}
+
 .message-meta {
     margin-top: 0.25rem;
     font-size: 0.75rem;
@@ -543,6 +590,11 @@ dialog h2 {
     font-size: 1rem;
     font-weight: bolder;
     margin: 0 0 0.5rem;
+}
+
+.card-title svg {
+    vertical-align: -0.15em;
+    margin-left: 0.35rem;
 }
 
 dialog label,

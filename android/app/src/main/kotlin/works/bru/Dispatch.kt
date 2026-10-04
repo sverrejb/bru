@@ -14,6 +14,7 @@ suspend fun dispatch(
     repo: SmsRepository,
     sender: SmsSender,
     reqJson: String,
+    body: Body,
 ): String {
     val req = try {
         JSONObject(reqJson)
@@ -59,6 +60,8 @@ suspend fun dispatch(
 
         "clipboard" -> clipboard(context, req)
 
+        "file" -> receiveFile(context, req, body)
+
         else -> errorJson("unsupported op")
     }
 }
@@ -80,6 +83,19 @@ private suspend fun clipboard(context: Context, req: JSONObject): String {
         }
         else -> errorJson("empty clipboard")
     }
+}
+
+private suspend fun receiveFile(context: Context, req: JSONObject, body: Body): String {
+    val name = safeName(req.optString("name"))
+    val mime = req.optString("mime").ifBlank { "application/octet-stream" }
+    val uri = try {
+        saveDownload(context, name, mime, body)
+    } catch (e: Exception) {
+        Log.w("bru", "file receive failed: ${e.javaClass.simpleName}")
+        return errorJson("could not save the file")
+    }
+    BruService.notifyFile(context, name, uri)
+    return okJson()
 }
 
 private suspend fun send(

@@ -61,7 +61,7 @@ class BruService : Service() {
         startForegroundNotice()
         val app = applicationContext
         sender = SmsSender(app)
-        IrohNet.startServing(app) { dispatch(app, repo, sender, it) }
+        IrohNet.startServing(app) { req, body -> dispatch(app, repo, sender, req, body) }
         ContextCompat.registerReceiver(
             this,
             sentReceiver,
@@ -121,6 +121,9 @@ class BruService : Service() {
         nm.createNotificationChannel(
             NotificationChannel(CLIP_CHANNEL, "Clipboard", NotificationManager.IMPORTANCE_DEFAULT),
         )
+        nm.createNotificationChannel(
+            NotificationChannel(FILE_CHANNEL, "Files", NotificationManager.IMPORTANCE_DEFAULT),
+        )
         val notification: Notification = Notification.Builder(this, CHANNEL)
             .setContentTitle("Bru active")
             .setSmallIcon(R.drawable.ic_bru_notification)
@@ -140,6 +143,8 @@ class BruService : Service() {
         private const val NOTIF_ID = 1
         private const val CLIP_CHANNEL = "bru_clipboard"
         internal const val CLIP_NOTIF_ID = 2
+        private const val FILE_CHANNEL = "bru_files"
+        private const val FILE_NOTIF_ID = 3
 
         private fun pending(context: Context, code: Int, key: String, value: String) =
             PendingIntent.getActivity(
@@ -179,6 +184,24 @@ class BruService : Service() {
                 .setLargeIcon(Icon.createWithContentUri(image))
             context.getSystemService(NotificationManager::class.java)
                 .notify(CLIP_NOTIF_ID, builder.build())
+        }
+
+        fun notifyFile(context: Context, name: String, file: Uri) {
+            val open = PendingIntent.getActivity(
+                context,
+                3,
+                Intent(Intent.ACTION_VIEW, file)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+            val builder = Notification.Builder(context, FILE_CHANNEL)
+                .setContentTitle("Bru: File received")
+                .setContentText(name)
+                .setSmallIcon(R.drawable.ic_bru_notification)
+                .setContentIntent(open)
+                .setAutoCancel(true)
+            context.getSystemService(NotificationManager::class.java)
+                .notify(FILE_NOTIF_ID, builder.build())
         }
 
         fun start(context: Context) {

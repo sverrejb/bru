@@ -177,6 +177,8 @@ name = "bru-web"
 version = "0.1.0"
 dependencies = [
  "iroh",
+ "js-sys",
+ "n0-future",
  "qrcode",
  "wasm-bindgen",
  "wasm-bindgen-futures",

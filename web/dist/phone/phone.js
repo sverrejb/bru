@@ -57,6 +57,20 @@ const clipboardImageBox = $('clipboardImageBox');
 const clipboardStatus = $('clipboardStatus');
 /** @type {HTMLElement} */
 const liveAnnounce = $('liveAnnounce');
+/** @type {HTMLInputElement} */
+const fileInput = $('fileInput');
+/** @type {HTMLElement} */
+const dropZone = $('dropZone');
+/** @type {HTMLElement} */
+const dropPrompt = $('dropPrompt');
+/** @type {HTMLElement} */
+const dropProgress = $('dropProgress');
+/** @type {HTMLElement} */
+const fileList = $('fileList');
+/** @type {HTMLTemplateElement} */
+const fileRowTpl = $('fileRowTpl');
+/** @type {HTMLElement} */
+const fileStatus = $('fileStatus');
 
 // 8 MiB frame limit, minus base64 inflation and JSON overhead
 const IMAGE_CAP = 5 * 1024 * 1024;
@@ -66,6 +80,7 @@ const IMAGE_TIMEOUT_MS = 60_000;
 
 /** @type {Blob | null} */
 let clipboardBlob = null;
+let fileQueue = Promise.resolve();
 
 const phone = loadPhone() ?? goPair();
 
@@ -83,6 +98,27 @@ $('newBtn').onclick = newMessage;
 copyClipboardBtn.onclick = copyClipboard;
 sendClipboardBtn.onclick = sendClipboard;
 clearClipboardBtn.onclick = () => showImage(null);
+
+fileInput.onchange = () => {
+  queueFiles(Array.from(fileInput.files ?? []));
+  fileInput.value = '';
+};
+dropZone.ondragover = (e) => {
+  e.preventDefault();
+  dropZone.classList.add('dragging');
+};
+dropZone.ondragleave = () => dropZone.classList.remove('dragging');
+dropZone.ondrop = (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragging');
+  queueFiles(Array.from(e.dataTransfer?.files ?? []));
+};
+/** @param {DragEvent} e */
+const ignoreStrayFileDrop = (e) => {
+  if (e.dataTransfer?.types.includes('Files')) e.preventDefault();
+};
+document.addEventListener('dragover', ignoreStrayFileDrop);
+document.addEventListener('drop', ignoreStrayFileDrop);
 
 notifyToggle.checked = Notification.permission === 'granted' && localStorage.getItem('bru.notify') === 'on';
 notifyToggle.onchange = askNotificationPermission;
@@ -105,10 +141,10 @@ document.addEventListener('paste', async (e) => {
   // the clipboard hands over a decoded PNG, so a photo arrives many times its original size
   const image = pasted.size > IMAGE_CAP ? await reencode(pasted, 'image/jpeg', JPEG_QUALITY) : pasted;
   if (image.size > IMAGE_CAP) {
-    showStatus('That image is too large.');
+    showStatus(clipboardStatus, 'That image is too large.');
     return;
   }
-  showStatus('');
+  showStatus(clipboardStatus, '');
   showImage(image);
   announce('Image pasted');
 });
@@ -144,9 +180,27 @@ async function acceptLoop() {
   const error = $('healthError');
   while (true) {
     try {
-      const { id, message } = JSON.parse(await bru.accept_incoming());
-      if (id !== phone.id) continue;
+      /** @type {Uint8Array<ArrayBuffer>[]} */
+      const parts = [];
+      const { message, error: failure } = JSON.parse(await bru.accept_incoming(phone.id, (/** @type {Uint8Array<ArrayBuffer>} */ chunk) => {
+        if (!parts.length) showProgress('Receiving a file…');
+        parts.push(chunk);
+      }));
+      if (failure) {
+        console.warn('[bru] push failed', failure);
+        if (parts.length) {
+          showProgress('');
+          showStatus(fileStatus, 'A file from your phone did not arrive in full.');
+        }
+        continue;
+      }
 
+      if (message.op === 'file') {
+        showProgress('');
+        addReceivedFile(message.name, new Blob(parts, { type: message.mime }));
+        announce(`File received: ${message.name}`);
+        continue;
+      }
       if (message.op === 'clipboard') {
         showImage(message.data ? fromBase64(message.data, message.mime) : null);
         if (message.text) clipboardText.value = message.text;
@@ -270,11 +324,14 @@ function showImage(blob) {
   if (refocus) (blob ? clearClipboardBtn : clipboardText).focus();
 }
 
-/** @param {string} message */
-function showStatus(message) {
-  clipboardStatus.textContent = '';
-  clipboardStatus.hidden = !message;
-  requestAnimationFrame(() => { clipboardStatus.textContent = message; });
+/**
+ * @param {HTMLElement} el
+ * @param {string} message
+ */
+function showStatus(el, message) {
+  el.textContent = '';
+  el.hidden = !message;
+  requestAnimationFrame(() => { el.textContent = message; });
 }
 
 async function copyClipboard() {
@@ -288,7 +345,7 @@ async function copyClipboard() {
     flashButton(copyClipboardBtn, 'Copied!');
   } catch (e) {
     console.error('[bru] clipboard copy failed', e);
-    showStatus(clipboardBlob ? 'Your browser would not take the image. Right-click it to save instead.' : 'Could not copy.');
+    showStatus(clipboardStatus, clipboardBlob ? "Couldn't copy the image. Right-click it and choose Save instead." : 'Could not copy.');
   }
 }
 
@@ -303,14 +360,86 @@ async function sendClipboard() {
     flashButton(sendClipboardBtn, 'Sent!');
     clipboardText.value = '';
     showImage(null);
-    showStatus('');
+    showStatus(clipboardStatus, '');
   } catch (e) {
     console.error('[bru] clipboard send failed', e);
     const failure = e instanceof Error ? e.message : 'Could not reach phone.';
-    showStatus(clipboardBlob && failure === 'Something went wrong. Sorry!'
+    showStatus(clipboardStatus, clipboardBlob && failure === 'Something went wrong. Sorry!'
       ? 'Phone app might be too old to receive images. Update it and try again.'
       : failure);
   }
+}
+
+/** @param {File[]} files */
+function queueFiles(files) {
+  fileQueue = fileQueue.then(() => sendFiles(files));
+}
+
+/** @param {File[]} files */
+async function sendFiles(files) {
+  showStatus(fileStatus, '');
+  for (const file of files) {
+    try {
+      await sendFile(file);
+      announce(`Sent ${file.name}`);
+    } catch (e) {
+      console.error('[bru] file send failed', e);
+      const failure = e instanceof Error ? e.message : 'Could not reach phone.';
+      showStatus(fileStatus, failure === 'unsupported op'
+        ? 'Phone app is too old to receive files. Update it and try again.'
+        : failure);
+      break;
+    }
+  }
+  showProgress('');
+}
+
+/** @param {File} file */
+async function sendFile(file) {
+  const reader = file.stream().getReader();
+  let sent = 0;
+  const next = async () => {
+    const { done, value } = await reader.read();
+    if (done) return null;
+    sent += value.length;
+    showProgress(`Sending ${file.name}… ${Math.floor((sent / file.size) * 100)}%`);
+    return value;
+  };
+  showProgress(`Sending ${file.name}…`);
+  const mime = file.type || 'application/octet-stream';
+  const response = JSON.parse(await bru.send_file(phone.id, file.name, mime, next));
+  if (response.error) throw new Error(response.error);
+}
+
+/** @param {string} text empty shows the drop prompt again */
+function showProgress(text) {
+  dropProgress.textContent = text;
+  dropProgress.hidden = !text;
+  dropPrompt.hidden = Boolean(text);
+}
+
+/**
+ * @param {string} name
+ * @param {Blob} blob
+ */
+function addReceivedFile(name, blob) {
+  const node = /** @type {DocumentFragment} */ (fileRowTpl.content.cloneNode(true));
+  const row = $$(node, '.file-row');
+  $$(node, '.file-name').textContent = name;
+  const link = /** @type {HTMLAnchorElement} */ ($$(node, 'a'));
+  link.href = URL.createObjectURL(blob);
+  link.download = name;
+  link.ariaLabel = `Download ${name}`;
+  const clear = $$(node, 'button');
+  clear.ariaLabel = `Clear ${name}`;
+  clear.onclick = () => {
+    const refocus = document.activeElement === clear;
+    URL.revokeObjectURL(link.href);
+    row.remove();
+    if (refocus) fileInput.focus();
+    announce(`Cleared ${name}`);
+  };
+  fileList.prepend(node);
 }
 
 /**
