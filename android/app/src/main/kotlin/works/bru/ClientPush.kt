@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.util.Log
 import kotlinx.coroutines.delay
 import org.json.JSONObject
+import java.io.InputStream
 import java.util.Base64
 
 class ClientPush(private val context: Context) {
@@ -33,6 +34,11 @@ class ClientPush(private val context: Context) {
             payload.put("mime", mime).put("data", Base64.getEncoder().encodeToString(bytes))
         }
         return IrohNet.dialPeer(context, payload.toString())
+    }
+
+    suspend fun sendFile(name: String, mime: String, input: InputStream): Boolean {
+        val header = JSONObject().put("op", "file").put("name", name).put("mime", mime)
+        return IrohNet.dialPeer(context, header.toString(), input)
     }
 
     companion object {
