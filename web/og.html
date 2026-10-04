@@ -6,25 +6,36 @@
   <title>Bru social card</title>
   <style>
     * { box-sizing: border-box; margin: 0; }
-    html, body { width: 1200px; height: 630px; }
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
     body {
       background: #f7f5f0;
       color: #3d3a35;
       font-family: "Courier New", Courier, monospace;
-      padding: 70px 90px;
+      padding: 64px 90px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
     }
-    .logo { width: 210px; }
-    h1 { font-size: 84px; font-weight: bolder; letter-spacing: 0.05em; }
-    .tagline { font-size: 38px; font-weight: bold; margin-top: 14px; letter-spacing: 0.03em; }
-    .sub { font-size: 26px; line-height: 1.5; color: #6b665e; margin-top: 26px; letter-spacing: 0.03em; }
+    .brand { display: flex; align-items: center; gap: 28px; }
+    .logo { width: 150px; flex-shrink: 0; }
+    h1 { font-size: 76px; font-weight: bolder; letter-spacing: 0.05em; }
+    .tagline { font-size: 32px; font-weight: bold; margin-top: 10px; letter-spacing: 0.02em; }
+    .features { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .features li { font-size: 30px; letter-spacing: 0.02em; }
+    .features li::before { content: "\2023  "; color: #335a3d; font-weight: bolder; }
+    .features b { font-weight: bolder; }
+    .points {
+      font-size: 27px;
+      line-height: 1.5;
+      color: #595651;
+      letter-spacing: 0.02em;
+    }
   </style>
 </head>
 
 <body>
-  <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="134 179 245 146" fill="#3d3a35">
+  <div class="brand">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="134 179 245 146" fill="#3d3a35">
   <path d="M288.59,254.93s-.04-.02-.06-.03c-.13-.07-.26-.14-.38-.22-1.05-.65-1.84-1.58-2.52-2.61-2.22-3.33-4.44-6.67-6.65-10.01-.15-.23-.25-.5-.36-.72.35-.82.36-.8,1.43-1.35,3.39-1.74,5.53-4.42,6.21-8.21.32-1.79.33-3.58,0-5.37-.68-3.77-2.7-6.55-6.17-8.21-1.56-.75-3.23-1.23-4.96-1.31-3.68-.18-7.37-.39-11.05-.41-5.37-.03-10.74.1-16.11.17-1.16.01-2.32.02-3.48.07-2.28.1-4.56.21-6.83.32h0s-2.48.12-2.48.12c-1.7.08-3.4.15-5.1.23-.32.02-.63.05-.94.07l-3.17.16.02,1.28v.05l.02.74c.7.55,1.11,1.21,1.34,1.95.23.73.28,1.54.28,2.36v.12c.01,8.73.01,17.47.02,26.21,0,1.77-.25,3.44-1.68,4.76.04.54.08,1.08.12,1.72,4.75-1.05,9.33-2.05,14.01-3.08.03-.4.06-.79.06-1.18,0-2.73,0-5.45,0-8.18,0-.51-.09-1.05.46-1.57.23-.03.58-.1.93-.1,5.33-.1,10.66-.21,15.98-.28,1.57-.02,3.13.08,4.69.12,1.08.02,1.89.49,2.57,1.33.7.87,1.5,1.67,2.2,2.55,1.97,2.46,4.22,4.71,5.9,7.41.17.04.33.09.48.11,4.98.81,9.9,1.9,14.76,3.28l.99.29.33-2.16s-.4-.17-.86-.42ZM268.02,233.94h-27.92v-9.37h27.92c2.58,0,4.68,2.1,4.68,4.69s-2.1,4.68-4.68,4.68Z"/>
   <path d="M264.75,255c.42.02.82.18,1.1.49.34.38.4.82.31,1.36-.47,3.05-.91,6.1-1.35,9.15-.22,1.5-.45,3.01-.65,4.52-.18,1.37-.61,1.69-1.96,1.59-3.6-.27-7.22-.26-10.83-.02-.67.04-1.33.08-2.04.12-.63.03-1.25-.32-1.45-.92-.02-.06-.04-.13-.05-.19-.73-4.66-1.43-9.33-2.13-13.99-.16-1.03.57-1.94,1.61-2.04,3.67-.34,7.35-.51,11.04-.4,2.18.07,4.35.22,6.4.34Z"/>
   <path d="M230.45,274.68c-1.57-4.41-3.14-8.82-4.72-13.23-.03-.08-.06-.15-.09-.22-.41-1.15-.15-1.75,1.05-2.07,2.82-.74,5.65-1.45,8.49-2.11,1.83-.42,3.68-.73,5.53-1.09.35-.07.71-.11.93-.14.98,0,1.44.37,1.58,1.27.33,2.09.64,4.19.95,6.29.37,2.49.72,4.98,1.08,7.48.02.12.07.23.08.35.17,1.11-.16,1.52-1.26,1.75-3.05.65-6.09,1.32-9.13,2.01-.86.2-1.68.51-2.53.75-1.17.34-1.58.1-1.98-1.03Z"/>
@@ -58,12 +69,19 @@
   <path d="M139.59,224.89h21.19v16.5h-21.19z"/>
   <path d="M139.59,243.88h21.19v16.5h-21.19z"/>
   </svg>
-  <div>
-    <h1>Bru</h1>
-    <p class="tagline">Android SMS in your browser.</p>
-    <p class="sub">Read and send your texts without picking up your phone.<br>
-      End-to-end encrypted, no cloud account.</p>
+    <div>
+      <h1>Bru</h1>
+      <p class="tagline">Bridge your phone and your computer.</p>
+    </div>
   </div>
+
+  <ul class="features">
+    <li><b>SMS</b> - Send and receive.</li>
+    <li><b>Clipboard</b> - Copy-paste both ways.</li>
+    <li><b>Files</b> - Send to and from your phone.</li>
+  </ul>
+
+  <p class="points">No account &middot; No ads &middot; No tracking &middot; End-to-end encrypted &middot; Self-hostable &middot; Open source and hackable</p>
 </body>
 
 </html>

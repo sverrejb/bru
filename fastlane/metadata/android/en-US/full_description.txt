@@ -6,7 +6,9 @@ FEATURES
 
 * Read and send SMS. Handle conversations with a real keyboard instead of reaching for your phone.
 * Share a clipboard. Send text and images in either direction. No more retyping addresses or emailing yourself long links.
+* Send and receive files both ways.
 * 100% self hostable.
+* Hackable, build your own client!
 
 HOW IT WORKS
 
@@ -24,7 +26,7 @@ Bru asks for the following permissions
 * Contacts. Used solely to show names instead of bare phone numbers. Contact data is never sent anywhere else.
 * Camera. Used to scan the pairing QR code. Can be done with a pairing code instead.
 
-PHILOSPHY
+PHILOSOPHY
 
 * Bru is free software, both as in beer and as in speech. 
 * The app contains no proprietary libraries, advertising, or trackers.

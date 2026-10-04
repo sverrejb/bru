@@ -3,7 +3,7 @@
 * Favicon/title "nubbin" / red dot on new messages
 * Optional show message content in notifications
 * Mute for specific threads? Either content or at all. (How do I UX that nicely?)
-* MMS - recieve. (Send seems impossible?)
+* MMS - receive. (Send seems impossible?)
 * Make phone ring?
 * Dark mode
 * PWA support?

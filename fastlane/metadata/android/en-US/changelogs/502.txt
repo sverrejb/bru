@@ -1,0 +1,5 @@
+Send and receive files.
+
+* Share any file with "Bru: Send file" to send it to your client
+* A file sent from the client is saved to Downloads, with a notification to open it
+* A file sent from your phone shows up with a download button on the client
