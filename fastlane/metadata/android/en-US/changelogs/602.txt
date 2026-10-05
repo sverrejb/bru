@@ -1,0 +1,3 @@
+Fix a pairing bug.
+
+* Fixed: opening a pairing link while Bru was already running could leave it stuck on "Not paired"
