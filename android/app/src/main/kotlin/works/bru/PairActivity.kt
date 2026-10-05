@@ -26,7 +26,7 @@ class PairActivity : Activity() {
             .setPositiveButton("Pair") { _, _ ->
                 startActivity(
                     Intent(this, MainActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                         .putExtra(MainActivity.EXTRA_PAIR_LINK, link),
                 )
                 finish()
