@@ -1,0 +1,3 @@
+Networking library now built from source.
+
+* Fixed: compatibility with devices that use 16 KB memory pages

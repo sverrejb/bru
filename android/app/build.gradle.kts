@@ -15,13 +15,14 @@ val uploadKeystore: String? = keystoreProperties.getProperty("uploadKeystore")
 android {
     namespace = "works.bru"
     compileSdk = 36
+    ndkVersion = "27.2.12479018"
 
     defaultConfig {
         applicationId = "works.bru"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.3.1"
+        versionCode = 7
+        versionName = "1.3.2"
     }
 
     flavorDimensions += "abi"
@@ -70,9 +71,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    packaging {
-        resources {
-            excludes += listOf("darwin-*/**", "linux-*/**", "win32-*/**")
+    sourceSets {
+        getByName("main") {
+            kotlin.srcDirs("../iroh-ffi/kotlin/lib/src/main/kotlin", "../iroh-ffi/kotlin/android/src/main/kotlin")
+            jniLibs.srcDir("../iroh-jniLibs")
         }
     }
 
@@ -115,7 +117,7 @@ dependencies {
     implementation("androidx.room:room-ktx:$room")
     ksp("androidx.room:room-compiler:$room")
 
-    implementation("computer.iroh:iroh-android:1.1.0")
+    implementation("net.java.dev.jna:jna:5.15.0@aar")
 
     implementation("com.google.zxing:core:3.5.3")
 

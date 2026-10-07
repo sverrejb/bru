@@ -13,8 +13,12 @@ cert     := "09cc90c8d6561deef614cf37e4d3958f4762a8af767063c16c177106ba616310"
 default:
     @just --list
 
+# Build libiroh_ffi.so from the iroh-ffi submodule
+iroh:
+    ./build-iroh.sh
+
 # Build the debug APK
-build:
+build: iroh
     ./gradlew :app:assemble{{abi}}Debug
 
 # Run the JVM unit tests
@@ -25,7 +29,7 @@ test:
 run: install launch
 
 # Install the debug build on the connected device
-install:
+install: iroh
     ./gradlew :app:install{{abi}}Debug
 
 # Launch the app on the device
@@ -33,11 +37,11 @@ launch:
     {{adb}} shell am start -n {{activity}}
 
 # Build the release APK
-release:
+release: iroh
     ./gradlew :app:assembleRelease
 
 # Build the signed App Bundle (.aab) for Play upload
-playBundle:
+playBundle: iroh
     ./gradlew :app:bundlePlayRelease
     @du -h app/build/outputs/bundle/playRelease/*.aab
 
@@ -75,20 +79,28 @@ clean:
     ./gradlew clean
 
 # Collect the Gradle-signed release APKs for publishing
-dist: release
+dist:
+    @git diff --quiet HEAD || { echo "Uncommitted changes, commit before dist"; exit 1; }
+    just release
     @mkdir -p app/build/outputs/signed
     cp app/build/outputs/apk/armv7/release/app-armv7-release.apk app/build/outputs/signed/works.bru-armeabi-v7a.apk
     cp app/build/outputs/apk/arm64/release/app-arm64-release.apk app/build/outputs/signed/works.bru-arm64-v8a.apk
     @ls -la app/build/outputs/signed/
 
-# Check the collected APKs are signed with the key existing installs expect
+# Check the collected APKs are signed with the expected key, zip-aligned, and use 16 KB pages
 verify:
     #!/usr/bin/env bash
     set -euo pipefail
     apksigner=$(ls -d "$HOME"/Library/Android/sdk/build-tools/*/apksigner | tail -1)
+    zipalign=$(dirname "$apksigner")/zipalign
+    ndk_bin=$(ls -d "$HOME"/Library/Android/sdk/ndk/*/toolchains/llvm/prebuilt/*/bin | tail -1)
     for apk in app/build/outputs/signed/works.bru-{armeabi-v7a,arm64-v8a}.apk; do
         [[ -f $apk ]] || { echo "MISSING    $apk, run just dist first"; exit 1; }
         certs=$("$apksigner" verify --print-certs "$apk" 2>&1) || { echo "UNSIGNED   $apk"; exit 1; }
         [[ $certs == *"SHA-256 digest: {{cert}}"* ]] || { echo "WRONG KEY  $apk"; exit 1; }
+        "$zipalign" -c -P 16 4 "$apk" > /dev/null || { echo "UNALIGNED  $apk"; exit 1; }
+        libs=$(mktemp -d)
+        unzip -q "$apk" 'lib/*' -d "$libs"
+        PATH=$ndk_bin:$PATH bash iroh-ffi/scripts/verify_android_page_size.sh "$libs/lib" > /dev/null || { echo "4 KB PAGES $apk"; exit 1; }
         echo "ok         $apk"
     done

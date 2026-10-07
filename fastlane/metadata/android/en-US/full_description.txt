@@ -1,6 +1,6 @@
 Bru is a Bidirectional Remote Uplink for your Android Phone.
 
-It links your phone to a client in your browser over a direct, end-to-end-encrypted connection, so you can deal with your phone without picking it up. There is no account to create, no server holding your messages.
+It links your phone to a client in your browser over a direct, end-to-end-encrypted connection, so you can deal with your phone without picking it up. There is no account to create, no server holding your messages. Bru uses n0's public iroh infrastructure for connecting your devices. It sees only encrypted data, and you can host your own if you so wish.
 
 FEATURES
 

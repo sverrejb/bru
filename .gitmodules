@@ -1,0 +1,3 @@
+[submodule "android/iroh-ffi"]
+	path = android/iroh-ffi
+	url = https://github.com/n0-computer/iroh-ffi
