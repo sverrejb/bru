@@ -3,3 +3,7 @@
 build/
 app/build/
 local.properties
+*.jks
+*.keystore
+iroh-ffi/target/
+iroh-jniLibs/

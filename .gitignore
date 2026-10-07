@@ -11,6 +11,7 @@ local.properties
 *.keystore
 *.jks
 captures/
+android/iroh-jniLibs/
 
 # macOS
 .DS_Store
