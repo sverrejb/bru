@@ -1,3 +1,4 @@
 Networking library now built from source.
 
 * Fixed: compatibility with devices that use 16 KB memory pages
+* Fixed: sharing an unreadable image to the client could crash Bru

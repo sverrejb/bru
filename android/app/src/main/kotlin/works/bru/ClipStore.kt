@@ -38,7 +38,7 @@ internal fun extensionOf(mime: String): String = mime.substringAfter('/', "jpg")
 
 internal suspend fun imageForSend(context: Context, uri: Uri): Pair<String, ByteArray>? =
     withContext(Dispatchers.IO) {
-        val raw = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        val raw = runCatching { context.contentResolver.openInputStream(uri) }.getOrNull()?.use { it.readBytes() }
             ?: return@withContext null
         if (raw.size <= SEND_CAP) (context.contentResolver.getType(uri) ?: "image/jpeg") to raw
         else compress(raw)
