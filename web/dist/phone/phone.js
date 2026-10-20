@@ -300,6 +300,8 @@ async function sendMessage() {
   pending.set(clientId, optimistic);
   smsBody.value = '';
   drafts.delete(to);
+  threadListEl.prepend(row);
+  $$(row, '.thread-preview').textContent = body;
   renderMessages(messagesOf(row));
 
   try {
